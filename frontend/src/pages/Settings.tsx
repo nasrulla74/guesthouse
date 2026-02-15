@@ -38,7 +38,19 @@ export default function Settings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   
-  const [guestHouse, setGuestHouse] = useState<GuestHouse | null>(null)
+  const [guestHouse, setGuestHouse] = useState<GuestHouse>({
+    id: '',
+    gh_name: '',
+    contact_number: '',
+    email: '',
+    website: '',
+    address: '',
+    tin_no: '',
+    permit_no: '',
+    company_name: '',
+    company_reg_no: '',
+    is_active: true
+  })
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
   
@@ -102,7 +114,7 @@ export default function Settings() {
     try {
       let guestHouseId = guestHouse.id
 
-      if (!guestHouseId) {
+      if (!guestHouseId || guestHouseId === '') {
         const { data: newGh, error: createError } = await supabase
           .from('guest_houses')
           .insert({
@@ -435,8 +447,8 @@ export default function Settings() {
                     <label style={styles.label}>Company Name</label>
                     <input
                       type="text"
-                      value={guestHouse.company_name || ''}
-                      onChange={(e) => setGuestHouse({ ...guestHouse, company_name: e.target.value })}
+                      value={guestHouse?.company_name || ''}
+                      onChange={(e) => setGuestHouse({ ...guestHouse!, company_name: e.target.value })}
                       disabled={!isEditing}
                       style={styles.input}
                     />
@@ -445,8 +457,8 @@ export default function Settings() {
                     <label style={styles.label}>Company Reg. No.</label>
                     <input
                       type="text"
-                      value={guestHouse.company_reg_no || ''}
-                      onChange={(e) => setGuestHouse({ ...guestHouse, company_reg_no: e.target.value })}
+                      value={guestHouse?.company_reg_no || ''}
+                      onChange={(e) => setGuestHouse({ ...guestHouse!, company_reg_no: e.target.value })}
                       disabled={!isEditing}
                       style={styles.input}
                     />
