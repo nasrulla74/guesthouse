@@ -7,6 +7,7 @@ import DashboardLayout from './pages/DashboardLayout'
 import DashboardHome from './pages/DashboardHome'
 import Settings from './pages/Settings'
 import Bookings from './pages/Bookings'
+import Countries from './pages/Countries'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function AppRoutes() {
@@ -34,6 +35,7 @@ function AppRoutes() {
       >
         <Route index element={<DashboardHome />} />
         <Route path="bookings" element={<Bookings />} />
+        <Route path="countries" element={<Countries />} />
         <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

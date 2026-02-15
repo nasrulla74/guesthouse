@@ -104,18 +104,29 @@ CREATE TABLE IF NOT EXISTS customers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Countries Table
+CREATE TABLE IF NOT EXISTS countries (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    country_name VARCHAR(100) NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_room_types_gh_id ON room_types(gh_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_room_type_id ON rooms(room_type_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_room_no ON rooms(room_no);
 CREATE INDEX IF NOT EXISTS idx_customers_cu_type ON customers(cu_type);
 CREATE INDEX IF NOT EXISTS idx_customers_country ON customers(country);
+CREATE INDEX IF NOT EXISTS idx_countries_country_name ON countries(country_name);
 
 -- Enable Row Level Security
 ALTER TABLE guest_houses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE room_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE countries ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for anon access (adjust as needed for your security requirements)
 CREATE POLICY "Allow anon read guest_houses" ON guest_houses FOR SELECT USING (true);
@@ -137,6 +148,11 @@ CREATE POLICY "Allow anon read customers" ON customers FOR SELECT USING (true);
 CREATE POLICY "Allow anon insert customers" ON customers FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anon update customers" ON customers FOR UPDATE USING (true);
 CREATE POLICY "Allow anon delete customers" ON customers FOR DELETE USING (true);
+
+CREATE POLICY "Allow anon read countries" ON countries FOR SELECT USING (true);
+CREATE POLICY "Allow anon insert countries" ON countries FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon update countries" ON countries FOR UPDATE USING (true);
+CREATE POLICY "Allow anon delete countries" ON countries FOR DELETE USING (true);
 
 -- Storage bucket policies for images bucket
 CREATE POLICY "Allow public read access" ON storage.objects FOR SELECT USING (bucket_id = 'images');
