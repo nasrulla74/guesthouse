@@ -21,7 +21,7 @@ interface RoomType {
   id: string
   gh_id: string
   name: string
-  size: string
+  total_rooms: string
 }
 
 interface Room {
@@ -166,14 +166,14 @@ export default function Settings() {
   }
 
   const handleAddRoomType = async () => {
-    if (!roomTypeForm.name || !roomTypeForm.size || !guestHouse || !guestHouse.id) return
+    if (!roomTypeForm.name || !roomTypeForm.total_rooms || !guestHouse || !guestHouse.id) return
     try {
       const { data, error } = await supabase
         .from('room_types')
         .insert({
           gh_id: guestHouse.id,
           name: roomTypeForm.name,
-          size: roomTypeForm.size
+          size: roomTypeForm.total_rooms
         })
         .select()
         .single()
@@ -199,18 +199,18 @@ export default function Settings() {
 
   const handleEditRoomType = (rt: RoomType) => {
     setEditingRoomType(rt)
-    setRoomTypeForm({ name: rt.name, size: rt.size })
+    setRoomTypeForm({ name: rt.name, total_rooms: rt.total_rooms })
     setShowRoomTypeModal(true)
   }
 
   const handleUpdateRoomType = async () => {
-    if (!editingRoomType || !roomTypeForm.name || !roomTypeForm.size) return
+    if (!editingRoomType || !roomTypeForm.name || !roomTypeForm.total_rooms) return
     try {
       const { error } = await supabase
         .from('room_types')
         .update({
           name: roomTypeForm.name,
-          size: roomTypeForm.size,
+          size: roomTypeForm.total_rooms,
           updated_at: new Date().toISOString()
         })
         .eq('id', editingRoomType.id)
@@ -493,7 +493,7 @@ export default function Settings() {
                 <thead>
                   <tr>
                     <th style={styles.th}>Name</th>
-                    <th style={styles.th}>Size</th>
+                    <th style={styles.th}>Total Rooms</th>
                     <th style={styles.th}>Actions</th>
                   </tr>
                 </thead>
@@ -501,7 +501,7 @@ export default function Settings() {
                   {roomTypes.map((rt) => (
                     <tr key={rt.id} style={styles.tr}>
                       <td style={styles.td}>{rt.name}</td>
-                      <td style={styles.td}>{rt.size}</td>
+                      <td style={styles.td}>{rt.total_rooms}</td>
                       <td style={styles.td}>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button onClick={() => handleEditRoomType(rt)} style={styles.editBtnTable}>
@@ -615,12 +615,12 @@ export default function Settings() {
                 />
               </div>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Size</label>
+                <label style={styles.label}>Total Rooms</label>
                 <input
                   type="text"
-                  value={roomTypeForm.size || ''}
-                  onChange={(e) => setRoomTypeForm({ ...roomTypeForm, size: e.target.value })}
-                  placeholder="e.g. 250 sqft"
+                  value={roomTypeForm.total_rooms || ''}
+                  onChange={(e) => setRoomTypeForm({ ...roomTypeForm, total_rooms: e.target.value })}
+                  placeholder="e.g. 10"
                   style={styles.input}
                 />
               </div>
