@@ -1,15 +1,21 @@
-import { Home, ChevronRight, Star, MoreHorizontal, Users } from 'lucide-react'
+import { useState } from 'react'
+import { Home, ChevronRight, Star, MoreHorizontal, Users, Sun, Moon } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import StatsCards from '../components/StatsCards'
 import ReviewTable from '../components/ReviewTable'
+import { useTheme } from '../context/ThemeContext'
 
 export default function Dashboard() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const { theme, toggleTheme } = useTheme()
 
   return (
     <div style={styles.container}>
-      <Sidebar />
-      <main style={styles.main}>
-        {/* Top Breadcrumbs and Actions */}
+      <Sidebar 
+        collapsed={sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      />
+      <main style={{ ...styles.main, marginLeft: sidebarCollapsed ? '80px' : '256px' }}>
         <div style={styles.topBar}>
           <nav style={styles.breadcrumb}>
             <Home size={14} style={styles.breadcrumbIcon} />
@@ -18,12 +24,16 @@ export default function Dashboard() {
             <ChevronRight size={14} style={styles.chevron} />
             <span style={styles.breadcrumbActive}>Guests Reviews</span>
           </nav>
-          <button style={styles.moreButton}>
-            <MoreHorizontal size={18} />
-          </button>
+          <div style={styles.actions}>
+            <button onClick={toggleTheme} style={styles.themeToggle}>
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <button style={styles.moreButton}>
+              <MoreHorizontal size={18} />
+            </button>
+          </div>
         </div>
 
-        {/* Page Header */}
         <div style={styles.header}>
           <div style={styles.iconBox}>
             <Users size={32} style={{ color: '#FAFAFA' }} />
@@ -37,10 +47,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Stats Cards Row */}
         <StatsCards />
-
-        {/* Data Table Section */}
         <ReviewTable />
       </main>
     </div>
@@ -55,8 +62,8 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   main: {
     flex: 1,
-    marginLeft: '256px',
     padding: '32px',
+    transition: 'margin-left 0.2s ease',
   },
   topBar: {
     display: 'flex',
@@ -86,6 +93,23 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   chevron: {
     color: '#444',
+  },
+  actions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  themeToggle: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '8px',
+    backgroundColor: '#1E1E1E',
+    border: '1px solid #333',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#888',
+    cursor: 'pointer',
   },
   moreButton: {
     width: '32px',
