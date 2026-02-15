@@ -67,11 +67,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       )}
       {!isMobile && (
         <div style={styles.header}>
-          {logoUrl ? (
-            <img src={logoUrl} alt="Logo" style={collapsed ? styles.logoCollapsed : styles.logoImage} />
-          ) : (
-            !collapsed && <span style={styles.logoText}>{guestHouseName}</span>
+          {logoUrl && !collapsed && (
+            <img src={logoUrl} alt="Logo" style={styles.logoImage} />
           )}
+          {!logoUrl && !collapsed && <span style={styles.logoText}>{guestHouseName}</span>}
           <button onClick={onToggle} style={styles.collapseBtn}>
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
