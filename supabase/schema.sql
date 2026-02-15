@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS guest_houses (
     company_name VARCHAR(255),
     company_reg_no VARCHAR(100),
     is_active BOOLEAN DEFAULT true,
+    logo_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -25,7 +26,7 @@ CREATE TABLE IF NOT EXISTS room_types (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     gh_id UUID REFERENCES guest_houses(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    size VARCHAR(50),
+    total_rooms VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

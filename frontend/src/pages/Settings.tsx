@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Save, Edit2, Plus, X, Trash2, Loader2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Save, Edit2, Plus, X, Trash2, Loader2, Upload } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
 
@@ -15,6 +15,7 @@ interface GuestHouse {
   company_name: string
   company_reg_no: string
   is_active: boolean
+  logo_url: string
 }
 
 interface RoomType {
@@ -49,10 +50,13 @@ export default function Settings() {
     permit_no: '',
     company_name: '',
     company_reg_no: '',
-    is_active: true
+    is_active: true,
+    logo_url: ''
   })
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [roomTypeForm, setRoomTypeForm] = useState<Partial<RoomType>>({})
   const [roomForm, setRoomForm] = useState<Partial<Room>>({})
@@ -108,6 +112,33 @@ export default function Settings() {
     }
   }
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !guestHouse.id) return
+
+    setUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${guestHouse.id}-logo.${fileExt}`
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('logos')
+        .upload(fileName, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('logos')
+        .getPublicUrl(fileName)
+
+      setGuestHouse({ ...guestHouse, logo_url: publicUrl })
+    } catch (error) {
+      console.error('Error uploading logo:', error)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleSaveGuestHouse = async () => {
     if (!guestHouse) return
     setSaving(true)
@@ -127,7 +158,8 @@ export default function Settings() {
             permit_no: guestHouse.permit_no,
             company_name: guestHouse.company_name,
             company_reg_no: guestHouse.company_reg_no,
-            is_active: guestHouse.is_active
+            is_active: guestHouse.is_active,
+            logo_url: guestHouse.logo_url
           })
           .select()
           .single()
@@ -151,6 +183,7 @@ export default function Settings() {
             company_name: guestHouse.company_name,
             company_reg_no: guestHouse.company_reg_no,
             is_active: guestHouse.is_active,
+            logo_url: guestHouse.logo_url,
             updated_at: new Date().toISOString()
           })
           .eq('id', guestHouseId)
@@ -363,6 +396,44 @@ export default function Settings() {
               </div>
 
               <div style={styles.form}>
+                <div style={styles.logoSection}>
+                  <div style={styles.logoPreview}>
+                    {guestHouse.logo_url ? (
+                      <img src={guestHouse.logo_url} alt="Logo" style={styles.logoImage} />
+                    ) : (
+                      <div style={styles.logoPlaceholder}>
+                        <Upload size={24} style={{ color: 'var(--text-muted)' }} />
+                      </div>
+                    )}
+                  </div>
+                  <div style={styles.logoActions}>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleLogoUpload}
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={!isEditing || uploading}
+                      style={styles.uploadBtn}
+                    >
+                      {uploading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Upload size={16} />}
+                      {uploading ? 'Uploading...' : 'Upload Logo'}
+                    </button>
+                    {guestHouse.logo_url && (
+                      <button
+                        onClick={() => setGuestHouse({ ...guestHouse, logo_url: '' })}
+                        disabled={!isEditing}
+                        style={styles.removeLogoBtn}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <div style={styles.formRow}>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Guest House Name</label>
@@ -901,6 +972,62 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '8px',
     fontSize: '14px',
     color: 'var(--text-primary)',
+    cursor: 'pointer',
+  },
+  logoSection: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '24px',
+    paddingBottom: '20px',
+    borderBottom: '1px solid var(--border)',
+    marginBottom: '20px',
+  },
+  logoPreview: {
+    width: '100px',
+    height: '100px',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    backgroundColor: 'var(--background-tertiary)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '1px solid var(--border)',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  logoPlaceholder: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoActions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  uploadBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '10px 16px',
+    backgroundColor: 'var(--primary)',
+    border: 'none',
+    borderRadius: 'var(--border-radius)',
+    color: '#FAFAFA',
+    fontSize: '13px',
+    fontWeight: 500,
+    cursor: 'pointer',
+  },
+  removeLogoBtn: {
+    padding: '8px 16px',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--border-radius)',
+    color: 'var(--text-muted)',
+    fontSize: '13px',
     cursor: 'pointer',
   },
   checkbox: {
