@@ -102,7 +102,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <div style={{ padding: '0 24px' }}>
+        <div style={{ padding: '0 16px' }}>
           <Outlet />
         </div>
       </main>
@@ -127,21 +127,21 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   topBarBg: {
     backgroundColor: 'var(--primary)',
-    padding: '12px 24px',
+    padding: '8px 16px',
   },
   topBarText: {
     color: 'white',
-    fontSize: '16px',
+    fontSize: '13px',
     fontWeight: 600,
   },
   topBar: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '16px 24px',
-    marginTop: '16px',
+    padding: '12px 16px',
+    marginTop: '12px',
     flexWrap: 'wrap',
-    gap: '12px',
+    gap: '8px',
   },
   leftControls: {
     display: 'flex',
@@ -219,27 +219,27 @@ const styles: { [key: string]: React.CSSProperties } = {
   header: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
-    marginBottom: '24px',
+    gap: '12px',
+    marginBottom: '16px',
     flexWrap: 'wrap',
   },
   iconBox: {
-    width: '64px',
-    height: '64px',
+    width: '40px',
+    height: '40px',
     backgroundColor: 'var(--background-tertiary)',
-    borderRadius: '16px',
+    borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
   },
   titleRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: '6px',
   },
   title: {
-    fontSize: '24px',
+    fontSize: '18px',
     fontWeight: 700,
     color: 'var(--text-primary)',
     margin: 0,

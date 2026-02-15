@@ -16,11 +16,11 @@
   --border: #333;
   --link: #1F4B37;
   --font-family: 'Circular', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --spacing: 8px;
-  --border-radius: 0px;
-  --sidebar-width: 256px;
-  --sidebar-collapsed: 80px;
-  --topbar-height: 60px;
+  --spacing: 4px;
+  --border-radius: 4px;
+  --sidebar-width: 200px;
+  --sidebar-collapsed: 64px;
+  --topbar-height: 48px;
 }
 
 [data-theme="light"] {
@@ -40,21 +40,21 @@ body {
   font-family: var(--font-family);
   background-color: var(--background);
   color: var(--text-primary);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.4;
   min-height: 100vh;
   transition: background-color 0.3s, color 0.3s;
 }
 
 @media (min-width: 640px) {
   body {
-    font-size: 14px;
+    font-size: 12px;
   }
 }
 
 @media (min-width: 1024px) {
   body {
-    font-size: 16px;
+    font-size: 13px;
   }
 }
 
@@ -63,13 +63,13 @@ body {
 }
 
 h1 {
-  font-size: 72px;
+  font-size: 24px;
   font-weight: 700;
 }
 
 h2 {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  fontWeight: 600;
 }
 
 a {
@@ -83,7 +83,7 @@ a:hover {
 
 input, button {
   font-family: var(--font-family);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 button {
