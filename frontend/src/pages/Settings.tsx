@@ -173,7 +173,7 @@ export default function Settings() {
         .insert({
           gh_id: guestHouse.id,
           name: roomTypeForm.name,
-          size: roomTypeForm.total_rooms
+          total_rooms: roomTypeForm.total_rooms
         })
         .select()
         .single()
@@ -210,7 +210,7 @@ export default function Settings() {
         .from('room_types')
         .update({
           name: roomTypeForm.name,
-          size: roomTypeForm.total_rooms,
+          total_rooms: roomTypeForm.total_rooms,
           updated_at: new Date().toISOString()
         })
         .eq('id', editingRoomType.id)
