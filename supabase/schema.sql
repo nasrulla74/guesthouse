@@ -43,53 +43,6 @@ CREATE TABLE IF NOT EXISTS rooms (
     UNIQUE(room_no, room_type_id)
 );
 
--- Insert default guest house (for testing)
-INSERT INTO guest_houses (
-    gh_name, 
-    contact_number, 
-    email, 
-    website, 
-    address, 
-    tin_no, 
-    permit_no, 
-    company_name, 
-    company_reg_no, 
-    is_active
-) VALUES (
-    'Grand Guest House',
-    '+1 234 567 8900',
-    'info@grandguesthouse.com',
-    'www.grandguesthouse.com',
-    '123 Main Street, City Center, State - 123456',
-    'TIN123456789',
-    'PERMIT2024001',
-    'Grand Hospitality Pvt Ltd',
-    'REG2024001',
-    true
-) ON CONFLICT DO NOTHING;
-
--- Insert default room types for the guest house
-INSERT INTO room_types (gh_id, name, size)
-SELECT id, 'Standard AC', '250 sqft' FROM guest_houses LIMIT 1
-ON CONFLICT DO NOTHING;
-
-INSERT INTO room_types (gh_id, name, size)
-SELECT id, 'Deluxe AC', '350 sqft' FROM guest_houses LIMIT 1
-ON CONFLICT DO NOTHING;
-
-INSERT INTO room_types (gh_id, name, size)
-SELECT id, 'Suite', '500 sqft' FROM guest_houses LIMIT 1
-ON CONFLICT DO NOTHING;
-
--- Insert sample rooms
-INSERT INTO rooms (room_no, room_type_id, size)
-SELECT '101', id, '250 sqft' FROM room_types WHERE name = 'Standard AC' LIMIT 1
-ON CONFLICT DO NOTHING;
-
-INSERT INTO rooms (room_no, room_type_id, size)
-SELECT '102', id, '250 sqft' FROM room_types WHERE name = 'Standard AC' LIMIT 1
-ON CONFLICT DO NOTHING;
-
 -- Customers Table
 CREATE TABLE IF NOT EXISTS customers (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -132,6 +85,30 @@ CREATE TABLE IF NOT EXISTS transfer_types (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Bookings Table
+CREATE TABLE IF NOT EXISTS bookings (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    booking_name VARCHAR(255) NOT NULL,
+    customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+    gh_id UUID REFERENCES guest_houses(id) ON DELETE SET NULL,
+    room_type_id UUID REFERENCES room_types(id) ON DELETE SET NULL,
+    room_id UUID REFERENCES rooms(id) ON DELETE SET NULL,
+    country_id UUID REFERENCES countries(id) ON DELETE SET NULL,
+    booking_method VARCHAR(50) NOT NULL CHECK (booking_method IN ('Foreign Tour Operator', 'Local Tour Operator Direct Booking (FIT)', 'Online Travel Agent (OTA)')),
+    booking_ref VARCHAR(100),
+    check_in_date DATE NOT NULL,
+    check_out_date DATE NOT NULL,
+    adults INTEGER DEFAULT 0,
+    childs INTEGER DEFAULT 0,
+    infants INTEGER DEFAULT 0,
+    meal_id UUID REFERENCES meal_plans(id) ON DELETE SET NULL,
+    transfer_id UUID REFERENCES transfer_types(id) ON DELETE SET NULL,
+    total_guests INTEGER GENERATED ALWAYS AS (adults + childs + infants) STORED,
+    bed_nights INTEGER GENERATED ALWAYS AS (check_out_date - check_in_date - 1) STORED,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_room_types_gh_id ON room_types(gh_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_room_type_id ON rooms(room_type_id);
@@ -141,6 +118,11 @@ CREATE INDEX IF NOT EXISTS idx_customers_country ON customers(country);
 CREATE INDEX IF NOT EXISTS idx_countries_country_name ON countries(country_name);
 CREATE INDEX IF NOT EXISTS idx_meal_plans_meal_code ON meal_plans(meal_code);
 CREATE INDEX IF NOT EXISTS idx_transfer_types_transfer_code ON transfer_types(transfer_code);
+CREATE INDEX IF NOT EXISTS idx_bookings_customer_id ON bookings(customer_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_gh_id ON bookings(gh_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_room_id ON bookings(room_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_check_in_date ON bookings(check_in_date);
+CREATE INDEX IF NOT EXISTS idx_bookings_check_out_date ON bookings(check_out_date);
 
 -- Enable Row Level Security
 ALTER TABLE guest_houses ENABLE ROW LEVEL SECURITY;
@@ -150,6 +132,7 @@ ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE countries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meal_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transfer_types ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for anon access (adjust as needed for your security requirements)
 CREATE POLICY "Allow anon read guest_houses" ON guest_houses FOR SELECT USING (true);
@@ -186,6 +169,11 @@ CREATE POLICY "Allow anon read transfer_types" ON transfer_types FOR SELECT USIN
 CREATE POLICY "Allow anon insert transfer_types" ON transfer_types FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anon update transfer_types" ON transfer_types FOR UPDATE USING (true);
 CREATE POLICY "Allow anon delete transfer_types" ON transfer_types FOR DELETE USING (true);
+
+CREATE POLICY "Allow anon read bookings" ON bookings FOR SELECT USING (true);
+CREATE POLICY "Allow anon insert bookings" ON bookings FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon update bookings" ON bookings FOR UPDATE USING (true);
+CREATE POLICY "Allow anon delete bookings" ON bookings FOR DELETE USING (true);
 
 -- Storage bucket policies for images bucket
 CREATE POLICY "Allow public read access" ON storage.objects FOR SELECT USING (bucket_id = 'images');

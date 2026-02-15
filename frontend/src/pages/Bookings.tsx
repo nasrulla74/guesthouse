@@ -4,42 +4,104 @@ import { supabase } from '../lib/supabase'
 
 interface Booking {
   id: string
-  customer_name: string
-  customer_phone: string
-  customer_email: string
+  booking_name: string
+  customer_id: string
+  gh_id: string
+  room_type_id: string
   room_id: string
-  check_in: string
-  check_out: string
-  total_amount: number
-  paid_amount: number
-  status: string
-  room?: { room_no: string; room_types?: { name: string } }
+  country_id: string
+  booking_method: string
+  booking_ref: string
+  check_in_date: string
+  check_out_date: string
+  adults: number
+  childs: number
+  infants: number
+  total_guests: number
+  bed_nights: number
+  meal_id: string
+  transfer_id: string
+  customer?: { name: string }
+  room?: { room_no: string }
+  room_type?: { name: string }
+  country?: { country_name: string }
+  meal_plan?: { meal_plan: string }
+  transfer_type?: { transfer_type: string }
+}
+
+interface Customer {
+  id: string
+  name: string
+}
+
+interface GuestHouse {
+  id: string
+  gh_name: string
+}
+
+interface RoomType {
+  id: string
+  name: string
 }
 
 interface Room {
   id: string
   room_no: string
   room_type_id: string
-  room_types?: { name: string }
 }
+
+interface Country {
+  id: string
+  country_name: string
+}
+
+interface MealPlan {
+  id: string
+  meal_code: string
+  meal_plan: string
+}
+
+interface TransferType {
+  id: string
+  transfer_code: string
+  transfer_type: string
+}
+
+const bookingMethods = [
+  'Foreign Tour Operator',
+  'Local Tour Operator Direct Booking (FIT)',
+  'Online Travel Agent (OTA)'
+]
 
 export default function Bookings() {
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [guestHouses, setGuestHouses] = useState<GuestHouse[]>([])
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
+  const [countries, setCountries] = useState<Country[]>([])
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
+  const [transferTypes, setTransferTypes] = useState<TransferType[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
   const [formData, setFormData] = useState({
-    customer_name: '',
-    customer_phone: '',
-    customer_email: '',
+    booking_name: '',
+    customer_id: '',
+    gh_id: '',
+    room_type_id: '',
     room_id: '',
-    check_in: '',
-    check_out: '',
-    total_amount: 0,
-    paid_amount: 0,
-    status: 'confirmed'
+    country_id: '',
+    booking_method: 'Foreign Tour Operator',
+    booking_ref: '',
+    check_in_date: '',
+    check_out_date: '',
+    adults: 0,
+    childs: 0,
+    infants: 0,
+    meal_id: '',
+    transfer_id: ''
   })
 
   useEffect(() => {
@@ -49,13 +111,25 @@ export default function Bookings() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [bookingsResult, roomsResult] = await Promise.all([
-        supabase.from('bookings').select('*, room:rooms(room_no, room_types(name))').order('created_at', { ascending: false }),
-        supabase.from('rooms').select('*, room_types(name)')
+      const [bookingsResult, customersResult, ghResult, rtResult, roomsResult, countriesResult, mpResult, ttResult] = await Promise.all([
+        supabase.from('bookings').select('*, customer:customers(name), room:rooms(room_no), room_type:room_types(name), country:countries(country_name), meal_plan:meal_plans(meal_plan), transfer_type:transfer_types(transfer_type)').order('created_at', { ascending: false }),
+        supabase.from('customers').select('id, name').order('name'),
+        supabase.from('guest_houses').select('id, gh_name'),
+        supabase.from('room_types').select('id, name'),
+        supabase.from('rooms').select('id, room_no, room_type_id'),
+        supabase.from('countries').select('id, country_name').order('country_name'),
+        supabase.from('meal_plans').select('id, meal_code, meal_plan'),
+        supabase.from('transfer_types').select('id, transfer_code, transfer_type').order('transfer_type')
       ])
       
       if (bookingsResult.data) setBookings(bookingsResult.data)
+      if (customersResult.data) setCustomers(customersResult.data)
+      if (ghResult.data) setGuestHouses(ghResult.data)
+      if (rtResult.data) setRoomTypes(rtResult.data)
       if (roomsResult.data) setRooms(roomsResult.data)
+      if (countriesResult.data) setCountries(countriesResult.data)
+      if (mpResult.data) setMealPlans(mpResult.data)
+      if (ttResult.data) setTransferTypes(ttResult.data)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -64,28 +138,34 @@ export default function Bookings() {
   }
 
   const handleSubmit = async () => {
+    if (!formData.booking_name || !formData.check_in_date || !formData.check_out_date) return
     try {
+      const submitData = {
+        booking_name: formData.booking_name,
+        customer_id: formData.customer_id || null,
+        gh_id: formData.gh_id || null,
+        room_type_id: formData.room_type_id || null,
+        room_id: formData.room_id || null,
+        country_id: formData.country_id || null,
+        booking_method: formData.booking_method,
+        booking_ref: formData.booking_ref || null,
+        check_in_date: formData.check_in_date,
+        check_out_date: formData.check_out_date,
+        adults: formData.adults,
+        childs: formData.childs,
+        infants: formData.infants,
+        meal_id: formData.meal_id || null,
+        transfer_id: formData.transfer_id || null
+      }
+
       if (editingBooking) {
         const { error } = await supabase
           .from('bookings')
-          .update({
-            customer_name: formData.customer_name,
-            customer_phone: formData.customer_phone,
-            customer_email: formData.customer_email,
-            room_id: formData.room_id,
-            check_in: formData.check_in,
-            check_out: formData.check_out,
-            total_amount: formData.total_amount,
-            paid_amount: formData.paid_amount,
-            status: formData.status,
-            updated_at: new Date().toISOString()
-          })
+          .update({ ...submitData, updated_at: new Date().toISOString() })
           .eq('id', editingBooking.id)
         if (error) throw error
       } else {
-        const { error } = await supabase
-          .from('bookings')
-          .insert(formData)
+        const { error } = await supabase.from('bookings').insert(submitData)
         if (error) throw error
       }
       fetchData()
@@ -110,28 +190,40 @@ export default function Bookings() {
     if (booking) {
       setEditingBooking(booking)
       setFormData({
-        customer_name: booking.customer_name,
-        customer_phone: booking.customer_phone,
-        customer_email: booking.customer_email,
-        room_id: booking.room_id,
-        check_in: booking.check_in,
-        check_out: booking.check_out,
-        total_amount: booking.total_amount,
-        paid_amount: booking.paid_amount,
-        status: booking.status
+        booking_name: booking.booking_name,
+        customer_id: booking.customer_id || '',
+        gh_id: booking.gh_id || '',
+        room_type_id: booking.room_type_id || '',
+        room_id: booking.room_id || '',
+        country_id: booking.country_id || '',
+        booking_method: booking.booking_method,
+        booking_ref: booking.booking_ref || '',
+        check_in_date: booking.check_in_date,
+        check_out_date: booking.check_out_date,
+        adults: booking.adults,
+        childs: booking.childs,
+        infants: booking.infants,
+        meal_id: booking.meal_id || '',
+        transfer_id: booking.transfer_id || ''
       })
     } else {
       setEditingBooking(null)
       setFormData({
-        customer_name: '',
-        customer_phone: '',
-        customer_email: '',
+        booking_name: '',
+        customer_id: '',
+        gh_id: '',
+        room_type_id: '',
         room_id: '',
-        check_in: '',
-        check_out: '',
-        total_amount: 0,
-        paid_amount: 0,
-        status: 'confirmed'
+        country_id: '',
+        booking_method: 'Foreign Tour Operator',
+        booking_ref: '',
+        check_in_date: '',
+        check_out_date: '',
+        adults: 0,
+        childs: 0,
+        infants: 0,
+        meal_id: '',
+        transfer_id: ''
       })
     }
     setShowModal(true)
@@ -142,23 +234,19 @@ export default function Bookings() {
     setEditingBooking(null)
   }
 
+  const totalGuests = formData.adults + formData.childs + formData.infants
+  const bedNights = formData.check_in_date && formData.check_out_date 
+    ? Math.max(0, Math.ceil((new Date(formData.check_out_date).getTime() - new Date(formData.check_in_date).getTime()) / (1000 * 60 * 60 * 24)) - 1)
+    : 0
+
   const filteredBookings = bookings.filter(b => 
-    b.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.customer_phone?.includes(searchTerm) ||
-    b.customer_email?.toLowerCase().includes(searchTerm.toLowerCase())
+    b.booking_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    b.booking_ref?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    b.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': return '#4CAF50'
-      case 'checked_in': return '#2196F3'
-      case 'checked_out': return '#9E9E9E'
-      case 'cancelled': return '#FF6B6B'
-      default: return '#9E9E9E'
-    }
-  }
-
   const formatDate = (date: string) => {
+    if (!date) return '-'
     return new Date(date).toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'short', 
@@ -198,20 +286,21 @@ export default function Bookings() {
         <table style={styles.table}>
           <thead>
             <tr>
-              <th style={styles.th}>Guest</th>
+              <th style={styles.th}>Booking Name</th>
+              <th style={styles.th}>Customer</th>
               <th style={styles.th}>Room</th>
               <th style={styles.th}>Check In</th>
               <th style={styles.th}>Check Out</th>
-              <th style={styles.th}>Amount</th>
-              <th style={styles.th}>Paid</th>
-              <th style={styles.th}>Status</th>
+              <th style={styles.th}>Guests</th>
+              <th style={styles.th}>Bed Nights</th>
+              <th style={styles.th}>Method</th>
               <th style={styles.th}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredBookings.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ ...styles.td, textAlign: 'center', color: 'var(--text-muted)' }}>
+                <td colSpan={9} style={{ ...styles.td, textAlign: 'center', color: 'var(--text-muted)' }}>
                   No bookings found
                 </td>
               </tr>
@@ -219,25 +308,22 @@ export default function Bookings() {
               filteredBookings.map((booking) => (
                 <tr key={booking.id} style={styles.tr}>
                   <td style={styles.td}>
-                    <div style={styles.guestInfo}>
-                      <span style={styles.guestName}>{booking.customer_name}</span>
-                      <span style={styles.guestContact}>{booking.customer_phone}</span>
+                    <div style={styles.bookingInfo}>
+                      <span style={styles.bookingName}>{booking.booking_name}</span>
+                      {booking.booking_ref && <span style={styles.bookingRef}>{booking.booking_ref}</span>}
                     </div>
                   </td>
+                  <td style={styles.td}>{booking.customer?.name || '-'}</td>
                   <td style={styles.td}>
                     {booking.room?.room_no || '-'}
-                    {booking.room?.room_types && (
-                      <span style={styles.roomType}> ({booking.room.room_types.name})</span>
-                    )}
+                    {booking.room_type && <span style={styles.roomType}> ({booking.room_type.name})</span>}
                   </td>
-                  <td style={styles.td}>{formatDate(booking.check_in)}</td>
-                  <td style={styles.td}>{formatDate(booking.check_out)}</td>
-                  <td style={styles.td}>${booking.total_amount}</td>
-                  <td style={styles.td}>${booking.paid_amount}</td>
+                  <td style={styles.td}>{formatDate(booking.check_in_date)}</td>
+                  <td style={styles.td}>{formatDate(booking.check_out_date)}</td>
+                  <td style={styles.td}>{booking.total_guests}</td>
+                  <td style={styles.td}>{booking.bed_nights}</td>
                   <td style={styles.td}>
-                    <span style={{ ...styles.statusBadge, backgroundColor: getStatusColor(booking.status) }}>
-                      {booking.status}
-                    </span>
+                    <span style={styles.methodBadge}>{booking.booking_method}</span>
                   </td>
                   <td style={styles.td}>
                     <div style={styles.actions}>
@@ -267,101 +353,215 @@ export default function Bookings() {
             </div>
             <div style={styles.modalBody}>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Guest Name *</label>
+                <label style={styles.label}>Booking Name *</label>
                 <input
                   type="text"
-                  value={formData.customer_name}
-                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                  value={formData.booking_name}
+                  onChange={(e) => setFormData({ ...formData, booking_name: e.target.value })}
+                  placeholder="Enter booking name"
                   style={styles.input}
                 />
               </div>
+
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Phone</label>
+                  <label style={styles.label}>Customer</label>
+                  <select
+                    value={formData.customer_id}
+                    onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                    style={styles.input}
+                  >
+                    <option value="">Select Customer</option>
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Guest House</label>
+                  <select
+                    value={formData.gh_id}
+                    onChange={(e) => setFormData({ ...formData, gh_id: e.target.value })}
+                    style={styles.input}
+                  >
+                    <option value="">Select Guest House</option>
+                    {guestHouses.map((gh) => (
+                      <option key={gh.id} value={gh.id}>{gh.gh_name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Room Type</label>
+                  <select
+                    value={formData.room_type_id}
+                    onChange={(e) => setFormData({ ...formData, room_type_id: e.target.value })}
+                    style={styles.input}
+                  >
+                    <option value="">Select Room Type</option>
+                    {roomTypes.map((rt) => (
+                      <option key={rt.id} value={rt.id}>{rt.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Room</label>
+                  <select
+                    value={formData.room_id}
+                    onChange={(e) => setFormData({ ...formData, room_id: e.target.value })}
+                    style={styles.input}
+                  >
+                    <option value="">Select Room</option>
+                    {rooms.filter(r => !formData.room_type_id || r.room_type_id === formData.room_type_id).map((r) => (
+                      <option key={r.id} value={r.id}>{r.room_no}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Country</label>
+                  <select
+                    value={formData.country_id}
+                    onChange={(e) => setFormData({ ...formData, country_id: e.target.value })}
+                    style={styles.input}
+                  >
+                    <option value="">Select Country</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.country_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Booking Method</label>
+                  <select
+                    value={formData.booking_method}
+                    onChange={(e) => setFormData({ ...formData, booking_method: e.target.value })}
+                    style={styles.input}
+                  >
+                    {bookingMethods.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Booking Reference</label>
+                <input
+                  type="text"
+                  value={formData.booking_ref}
+                  onChange={(e) => setFormData({ ...formData, booking_ref: e.target.value })}
+                  placeholder="Enter booking reference"
+                  style={styles.input}
+                />
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Check In Date *</label>
+                  <input
+                    type="date"
+                    value={formData.check_in_date}
+                    onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
+                    style={styles.input}
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Check Out Date *</label>
+                  <input
+                    type="date"
+                    value={formData.check_out_date}
+                    onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
+                    style={styles.input}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Adults</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.adults}
+                    onChange={(e) => setFormData({ ...formData, adults: parseInt(e.target.value) || 0 })}
+                    style={styles.input}
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Children</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.childs}
+                    onChange={(e) => setFormData({ ...formData, childs: parseInt(e.target.value) || 0 })}
+                    style={styles.input}
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Infants</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.infants}
+                    onChange={(e) => setFormData({ ...formData, infants: parseInt(e.target.value) || 0 })}
+                    style={styles.input}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Total Guests (Auto)</label>
                   <input
                     type="text"
-                    value={formData.customer_phone}
-                    onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
-                    style={styles.input}
+                    value={totalGuests}
+                    readOnly
+                    style={{ ...styles.input, backgroundColor: 'var(--background-secondary)' }}
                   />
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Email</label>
+                  <label style={styles.label}>Bed Nights (Auto)</label>
                   <input
-                    type="email"
-                    value={formData.customer_email}
-                    onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
-                    style={styles.input}
+                    type="text"
+                    value={bedNights >= 0 ? bedNights : 0}
+                    readOnly
+                    style={{ ...styles.input, backgroundColor: 'var(--background-secondary)' }}
                   />
                 </div>
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Room *</label>
-                <select
-                  value={formData.room_id}
-                  onChange={(e) => setFormData({ ...formData, room_id: e.target.value })}
-                  style={styles.input}
-                >
-                  <option value="">Select Room</option>
-                  {rooms.map((room) => (
-                    <option key={room.id} value={room.id}>
-                      {room.room_no} - {room.room_types?.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Check In *</label>
-                  <input
-                    type="date"
-                    value={formData.check_in}
-                    onChange={(e) => setFormData({ ...formData, check_in: e.target.value })}
+                  <label style={styles.label}>Meal Plan</label>
+                  <select
+                    value={formData.meal_id}
+                    onChange={(e) => setFormData({ ...formData, meal_id: e.target.value })}
                     style={styles.input}
-                  />
+                  >
+                    <option value="">Select Meal Plan</option>
+                    {mealPlans.map((mp) => (
+                      <option key={mp.id} value={mp.id}>{mp.meal_code} - {mp.meal_plan}</option>
+                    ))}
+                  </select>
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Check Out *</label>
-                  <input
-                    type="date"
-                    value={formData.check_out}
-                    onChange={(e) => setFormData({ ...formData, check_out: e.target.value })}
+                  <label style={styles.label}>Transfer Type</label>
+                  <select
+                    value={formData.transfer_id}
+                    onChange={(e) => setFormData({ ...formData, transfer_id: e.target.value })}
                     style={styles.input}
-                  />
+                  >
+                    <option value="">Select Transfer</option>
+                    {transferTypes.map((tt) => (
+                      <option key={tt.id} value={tt.id}>{tt.transfer_code} - {tt.transfer_type}</option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-              <div style={styles.formRow}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Total Amount</label>
-                  <input
-                    type="number"
-                    value={formData.total_amount}
-                    onChange={(e) => setFormData({ ...formData, total_amount: parseFloat(e.target.value) || 0 })}
-                    style={styles.input}
-                  />
-                </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Paid Amount</label>
-                  <input
-                    type="number"
-                    value={formData.paid_amount}
-                    onChange={(e) => setFormData({ ...formData, paid_amount: parseFloat(e.target.value) || 0 })}
-                    style={styles.input}
-                  />
-                </div>
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  style={styles.input}
-                >
-                  <option value="confirmed">Confirmed</option>
-                  <option value="checked_in">Checked In</option>
-                  <option value="checked_out">Checked Out</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
               </div>
             </div>
             <div style={styles.modalFooter}>
@@ -378,9 +578,7 @@ export default function Bookings() {
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
-  container: {
-    padding: '12px',
-  },
+  container: { padding: '12px' },
   toolbar: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -427,10 +625,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid var(--border)',
     overflow: 'hidden',
   },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-  },
+  table: { width: '100%', borderCollapse: 'collapse' },
   th: {
     textAlign: 'left',
     padding: '12px',
@@ -447,37 +642,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: 'var(--text-primary)',
     borderBottom: '1px solid var(--border)',
   },
-  tr: {
-    borderBottom: '1px solid var(--border)',
-  },
-  guestInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-  },
-  guestName: {
-    fontWeight: 500,
-  },
-  guestContact: {
-    fontSize: '11px',
-    color: 'var(--text-muted)',
-  },
-  roomType: {
-    fontSize: '11px',
-    color: 'var(--text-muted)',
-  },
-  statusBadge: {
+  tr: { borderBottom: '1px solid var(--border)' },
+  bookingInfo: { display: 'flex', flexDirection: 'column', gap: '2px' },
+  bookingName: { fontWeight: 500 },
+  bookingRef: { fontSize: '11px', color: 'var(--text-muted)' },
+  roomType: { fontSize: '11px', color: 'var(--text-muted)' },
+  methodBadge: {
     padding: '4px 8px',
     borderRadius: '4px',
     fontSize: '10px',
     fontWeight: 600,
-    color: '#fff',
-    textTransform: 'uppercase',
+    backgroundColor: 'var(--background-tertiary)',
+    color: 'var(--text-primary)',
   },
-  actions: {
-    display: 'flex',
-    gap: '6px',
-  },
+  actions: { display: 'flex', gap: '6px' },
   editBtn: {
     padding: '6px',
     backgroundColor: 'transparent',
@@ -514,7 +692,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     backgroundColor: 'var(--background-secondary)',
     borderRadius: '12px',
     width: '100%',
-    maxWidth: '500px',
+    maxWidth: '600px',
     border: '1px solid var(--border)',
   },
   modalHeader: {
