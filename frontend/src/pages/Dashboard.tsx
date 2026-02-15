@@ -1,12 +1,9 @@
 import { Home, ChevronRight, Star, MoreHorizontal, Users } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import StatsCards from '../components/StatsCards'
 import ReviewTable from '../components/ReviewTable'
-import { useAuth } from '../context/AuthContext'
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth()
 
   return (
     <div style={styles.container}>

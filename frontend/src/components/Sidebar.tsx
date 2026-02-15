@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, CreditCard, Settings, LogOut, ChevronRight, Star, Bell, Search } from 'lucide-react'
+import { Home, Users, Calendar, CreditCard, Settings, LogOut, Star } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
 const menuItems = [

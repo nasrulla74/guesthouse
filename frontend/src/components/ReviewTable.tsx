@@ -1,4 +1,4 @@
-import { Star, MoreHorizontal, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { Star, MoreHorizontal } from 'lucide-react'
 
 const reviews = [
   { id: 1, guest: 'John Smith', rating: 5, date: '2024-01-15', comment: 'Excellent stay! Very clean and comfortable.', status: 'Published' },
