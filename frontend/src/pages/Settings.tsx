@@ -122,13 +122,13 @@ export default function Settings() {
       const fileName = `${guestHouse.id}-logo.${fileExt}`
       
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('logos')
+        .from('images')
         .upload(fileName, file, { upsert: true })
 
       if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage
-        .from('logos')
+        .from('images')
         .getPublicUrl(fileName)
 
       setGuestHouse({ ...guestHouse, logo_url: publicUrl })
