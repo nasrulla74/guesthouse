@@ -416,7 +416,7 @@ export default function Settings() {
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      disabled={!isEditing || uploading}
+                      disabled={uploading}
                       style={styles.uploadBtn}
                     >
                       {uploading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Upload size={16} />}
@@ -425,7 +425,6 @@ export default function Settings() {
                     {guestHouse.logo_url && (
                       <button
                         onClick={() => setGuestHouse({ ...guestHouse, logo_url: '' })}
-                        disabled={!isEditing}
                         style={styles.removeLogoBtn}
                       >
                         Remove
