@@ -64,11 +64,39 @@ export default function Settings() {
         supabase.from('rooms').select('*')
       ])
 
-      if (ghResult.data) setGuestHouse(ghResult.data)
+      if (ghResult.data) {
+        setGuestHouse(ghResult.data)
+      } else {
+        setGuestHouse({
+          id: '',
+          gh_name: '',
+          contact_number: '',
+          email: '',
+          website: '',
+          address: '',
+          tin_no: '',
+          permit_no: '',
+          company_name: '',
+          company_reg_no: '',
+          is_active: true
+        })
+      }
       if (rtResult.data) setRoomTypes(rtResult.data)
       if (rResult.data) setRooms(rResult.data)
     } catch (error) {
-      console.error('Error fetching data:', error)
+      setGuestHouse({
+        id: '',
+        gh_name: '',
+        contact_number: '',
+        email: '',
+        website: '',
+        address: '',
+        tin_no: '',
+        permit_no: '',
+        company_name: '',
+        company_reg_no: '',
+        is_active: true
+      })
     } finally {
       setLoading(false)
     }
@@ -78,24 +106,51 @@ export default function Settings() {
     if (!guestHouse) return
     setSaving(true)
     try {
-      const { error } = await supabase
-        .from('guest_houses')
-        .update({
-          gh_name: guestHouse.gh_name,
-          contact_number: guestHouse.contact_number,
-          email: guestHouse.email,
-          website: guestHouse.website,
-          address: guestHouse.address,
-          tin_no: guestHouse.tin_no,
-          permit_no: guestHouse.permit_no,
-          company_name: guestHouse.company_name,
-          company_reg_no: guestHouse.company_reg_no,
-          is_active: guestHouse.is_active,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', guestHouse.id)
+      let guestHouseId = guestHouse.id
 
-      if (error) throw error
+      if (!guestHouseId) {
+        const { data: newGh, error: createError } = await supabase
+          .from('guest_houses')
+          .insert({
+            gh_name: guestHouse.gh_name,
+            contact_number: guestHouse.contact_number,
+            email: guestHouse.email,
+            website: guestHouse.website,
+            address: guestHouse.address,
+            tin_no: guestHouse.tin_no,
+            permit_no: guestHouse.permit_no,
+            company_name: guestHouse.company_name,
+            company_reg_no: guestHouse.company_reg_no,
+            is_active: guestHouse.is_active
+          })
+          .select()
+          .single()
+
+        if (createError) throw createError
+        if (newGh) {
+          setGuestHouse(newGh)
+          guestHouseId = newGh.id
+        }
+      } else {
+        const { error } = await supabase
+          .from('guest_houses')
+          .update({
+            gh_name: guestHouse.gh_name,
+            contact_number: guestHouse.contact_number,
+            email: guestHouse.email,
+            website: guestHouse.website,
+            address: guestHouse.address,
+            tin_no: guestHouse.tin_no,
+            permit_no: guestHouse.permit_no,
+            company_name: guestHouse.company_name,
+            company_reg_no: guestHouse.company_reg_no,
+            is_active: guestHouse.is_active,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', guestHouseId)
+
+        if (error) throw error
+      }
       setIsEditing(false)
     } catch (error) {
       console.error('Error saving guest house:', error)
@@ -105,7 +160,7 @@ export default function Settings() {
   }
 
   const handleAddRoomType = async () => {
-    if (!roomTypeForm.name || !roomTypeForm.size || !guestHouse) return
+    if (!roomTypeForm.name || !roomTypeForm.size || !guestHouse || !guestHouse.id) return
     try {
       const { data, error } = await supabase
         .from('room_types')
@@ -235,10 +290,6 @@ export default function Settings() {
         <Loader2 size={32} style={{ color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
       </div>
     )
-  }
-
-  if (!guestHouse) {
-    return <div style={styles.container}>No guest house found</div>
   }
 
   return (
