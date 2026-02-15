@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, ChevronRight, Star, MoreHorizontal, Users, Sun, Moon, Menu, X } from 'lucide-react'
+import { Home, ChevronRight, Star, MoreHorizontal, Users, Sun, Moon, Menu } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import StatsCards from '../components/StatsCards'
 import ReviewTable from '../components/ReviewTable'
