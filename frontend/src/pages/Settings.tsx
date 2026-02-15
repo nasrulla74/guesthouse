@@ -67,36 +67,30 @@ export default function Settings() {
       if (ghResult.data) {
         setGuestHouse(ghResult.data)
       } else {
-        setGuestHouse({
-          id: '',
-          gh_name: '',
-          contact_number: '',
-          email: '',
-          website: '',
-          address: '',
-          tin_no: '',
-          permit_no: '',
-          company_name: '',
-          company_reg_no: '',
-          is_active: true
-        })
+        const { data: newGh, error: createError } = await supabase
+          .from('guest_houses')
+          .insert({
+            gh_name: 'Grand Guest House',
+            contact_number: '+1 234 567 8900',
+            email: 'info@grandguesthouse.com',
+            website: 'www.grandguesthouse.com',
+            address: '123 Main Street\nCity Center\nState - 123456',
+            tin_no: 'TIN123456789',
+            permit_no: 'PERMIT2024001',
+            company_name: 'Grand Hospitality Pvt Ltd',
+            company_reg_no: 'REG2024001',
+            is_active: true
+          })
+          .select()
+          .single()
+
+        if (createError) throw createError
+        if (newGh) setGuestHouse(newGh)
       }
       if (rtResult.data) setRoomTypes(rtResult.data)
       if (rResult.data) setRooms(rResult.data)
     } catch (error) {
-      setGuestHouse({
-        id: '',
-        gh_name: '',
-        contact_number: '',
-        email: '',
-        website: '',
-        address: '',
-        tin_no: '',
-        permit_no: '',
-        company_name: '',
-        company_reg_no: '',
-        is_active: true
-      })
+      console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
     }
