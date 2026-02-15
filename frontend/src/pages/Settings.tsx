@@ -121,7 +121,7 @@ export default function Settings() {
       const fileExt = file.name.split('.').pop()
       const fileName = `${guestHouse.id}-logo.${fileExt}`
       
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('images')
         .upload(fileName, file, { upsert: true })
 
