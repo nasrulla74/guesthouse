@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { Save, Edit2, Plus, X, Trash2, Sun, Moon, Bell } from 'lucide-react'
-import { useTheme } from '../context/ThemeContext'
+import { useState, useEffect } from 'react'
+import { Save, Edit2, Plus, X, Trash2, Sun, Moon, Bell, Loader2 } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 interface GuestHouse {
-  id: number
+  id: string
   gh_name: string
   contact_number: string
   email: string
@@ -17,109 +17,174 @@ interface GuestHouse {
 }
 
 interface RoomType {
-  id: number
-  gh_id: number
+  id: string
+  gh_id: string
   name: string
   size: string
 }
 
 interface Room {
-  id: number
+  id: string
   room_no: string
-  room_type_id: number
+  room_type_id: string
   size: string
 }
-
-const initialGuestHouse: GuestHouse = {
-  id: 1,
-  gh_name: 'Grand Guest House',
-  contact_number: '+1 234 567 8900',
-  email: 'info@grandguesthouse.com',
-  website: 'www.grandguesthouse.com',
-  address: '123 Main Street\nCity Center\nState - 123456',
-  tin_no: 'TIN123456789',
-  permit_no: 'PERMIT2024001',
-  company_name: 'Grand Hospitality Pvt Ltd',
-  company_reg_no: 'REG2024001',
-  is_active: true,
-}
-
-const initialRoomTypes: RoomType[] = [
-  { id: 1, gh_id: 1, name: 'Standard AC', size: '250 sqft' },
-  { id: 2, gh_id: 1, name: 'Deluxe AC', size: '350 sqft' },
-  { id: 3, gh_id: 1, name: 'Suite', size: '500 sqft' },
-]
-
-const initialRooms: Room[] = [
-  { id: 1, room_no: '101', room_type_id: 1, size: '250 sqft' },
-  { id: 2, room_no: '102', room_type_id: 1, size: '250 sqft' },
-  { id: 3, room_no: '201', room_type_id: 2, size: '350 sqft' },
-  { id: 4, room_no: '202', room_type_id: 2, size: '350 sqft' },
-  { id: 5, room_no: '301', room_type_id: 3, size: '500 sqft' },
-]
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<'guestHouse' | 'general'>('guestHouse')
   const [guestHouseTab, setGuestHouseTab] = useState<'info' | 'roomTypes' | 'rooms'>('info')
   const [isEditing, setIsEditing] = useState(false)
-  const [guestHouse, setGuestHouse] = useState<GuestHouse>(initialGuestHouse)
-  const [roomTypes, setRoomTypes] = useState<RoomType[]>(initialRoomTypes)
-  const [rooms, setRooms] = useState<Room[]>(initialRooms)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  
+  const [guestHouse, setGuestHouse] = useState<GuestHouse | null>(null)
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([])
+  const [rooms, setRooms] = useState<Room[]>([])
   
   const [roomTypeForm, setRoomTypeForm] = useState<Partial<RoomType>>({})
   const [roomForm, setRoomForm] = useState<Partial<Room>>({})
   const [showRoomTypeModal, setShowRoomTypeModal] = useState(false)
   const [showRoomModal, setShowRoomModal] = useState(false)
 
-  const { theme, toggleTheme } = useTheme()
-  const [notifications, setNotifications] = useState(true)
+  useEffect(() => {
+    fetchData()
+  }, [])
 
-  const handleSaveGuestHouse = () => {
-    setIsEditing(false)
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const [ghResult, rtResult, rResult] = await Promise.all([
+        supabase.from('guest_houses').select('*').limit(1).single(),
+        supabase.from('room_types').select('*'),
+        supabase.from('rooms').select('*')
+      ])
+
+      if (ghResult.data) setGuestHouse(ghResult.data)
+      if (rtResult.data) setRoomTypes(rtResult.data)
+      if (rResult.data) setRooms(rResult.data)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleAddRoomType = () => {
-    if (roomTypeForm.name && roomTypeForm.size) {
-      const newRoomType: RoomType = {
-        id: Date.now(),
-        gh_id: 1,
-        name: roomTypeForm.name,
-        size: roomTypeForm.size,
-      }
-      setRoomTypes([...roomTypes, newRoomType])
+  const handleSaveGuestHouse = async () => {
+    if (!guestHouse) return
+    setSaving(true)
+    try {
+      const { error } = await supabase
+        .from('guest_houses')
+        .update({
+          gh_name: guestHouse.gh_name,
+          contact_number: guestHouse.contact_number,
+          email: guestHouse.email,
+          website: guestHouse.website,
+          address: guestHouse.address,
+          tin_no: guestHouse.tin_no,
+          permit_no: guestHouse.permit_no,
+          company_name: guestHouse.company_name,
+          company_reg_no: guestHouse.company_reg_no,
+          is_active: guestHouse.is_active,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', guestHouse.id)
+
+      if (error) throw error
+      setIsEditing(false)
+    } catch (error) {
+      console.error('Error saving guest house:', error)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleAddRoomType = async () => {
+    if (!roomTypeForm.name || !roomTypeForm.size || !guestHouse) return
+    try {
+      const { data, error } = await supabase
+        .from('room_types')
+        .insert({
+          gh_id: guestHouse.id,
+          name: roomTypeForm.name,
+          size: roomTypeForm.size
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      if (data) setRoomTypes([...roomTypes, data])
       setRoomTypeForm({})
       setShowRoomTypeModal(false)
+    } catch (error) {
+      console.error('Error adding room type:', error)
     }
   }
 
-  const handleDeleteRoomType = (id: number) => {
-    setRoomTypes(roomTypes.filter(rt => rt.id !== id))
+  const handleDeleteRoomType = async (id: string) => {
+    try {
+      const { error } = await supabase.from('room_types').delete().eq('id', id)
+      if (error) throw error
+      setRoomTypes(roomTypes.filter(rt => rt.id !== id))
+    } catch (error) {
+      console.error('Error deleting room type:', error)
+    }
   }
 
-  const handleAddRoom = () => {
-    if (roomForm.room_no && roomForm.room_type_id && roomForm.size) {
-      const newRoom: Room = {
-        id: Date.now(),
-        room_no: roomForm.room_no,
-        room_type_id: roomForm.room_type_id,
-        size: roomForm.size,
-      }
-      setRooms([...rooms, newRoom])
+  const handleAddRoom = async () => {
+    if (!roomForm.room_no || !roomForm.room_type_id || !roomForm.size) return
+    try {
+      const { data, error } = await supabase
+        .from('rooms')
+        .insert({
+          room_no: roomForm.room_no,
+          room_type_id: roomForm.room_type_id,
+          size: roomForm.size
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      if (data) setRooms([...rooms, data])
       setRoomForm({})
       setShowRoomModal(false)
+    } catch (error) {
+      console.error('Error adding room:', error)
     }
   }
 
-  const handleDeleteRoom = (id: number) => {
-    setRooms(rooms.filter(r => r.id !== id))
+  const handleDeleteRoom = async (id: string) => {
+    try {
+      const { error } = await supabase.from('rooms').delete().eq('id', id)
+      if (error) throw error
+      setRooms(rooms.filter(r => r.id !== id))
+    } catch (error) {
+      console.error('Error deleting room:', error)
+    }
   }
 
-  const getRoomTypeName = (id: number) => {
+  const getRoomTypeName = (id: string) => {
     return roomTypes.find(rt => rt.id === id)?.name || 'Unknown'
+  }
+
+  if (loading) {
+    return (
+      <div style={{ ...styles.container, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <Loader2 size={32} style={{ color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
+      </div>
+    )
+  }
+
+  if (!guestHouse) {
+    return <div style={styles.container}>No guest house found</div>
   }
 
   return (
     <div style={styles.container}>
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
+      
       <div style={styles.tabs}>
         <button
           style={{ ...styles.tab, ...(activeTab === 'guestHouse' ? styles.activeTab : {}) }}
@@ -166,8 +231,8 @@ export default function Settings() {
                   {isEditing ? (
                     <>
                       <button onClick={() => setIsEditing(false)} style={styles.cancelBtn}>Cancel</button>
-                      <button onClick={handleSaveGuestHouse} style={styles.saveBtn}>
-                        <Save size={16} /> Save
+                      <button onClick={handleSaveGuestHouse} disabled={saving} style={styles.saveBtn}>
+                        <Save size={16} /> {saving ? 'Saving...' : 'Save'}
                       </button>
                     </>
                   ) : (
@@ -194,7 +259,7 @@ export default function Settings() {
                     <label style={styles.label}>Contact Number</label>
                     <input
                       type="text"
-                      value={guestHouse.contact_number}
+                      value={guestHouse.contact_number || ''}
                       onChange={(e) => setGuestHouse({ ...guestHouse, contact_number: e.target.value })}
                       disabled={!isEditing}
                       style={styles.input}
@@ -207,7 +272,7 @@ export default function Settings() {
                     <label style={styles.label}>Email</label>
                     <input
                       type="email"
-                      value={guestHouse.email}
+                      value={guestHouse.email || ''}
                       onChange={(e) => setGuestHouse({ ...guestHouse, email: e.target.value })}
                       disabled={!isEditing}
                       style={styles.input}
@@ -217,7 +282,7 @@ export default function Settings() {
                     <label style={styles.label}>Website</label>
                     <input
                       type="text"
-                      value={guestHouse.website}
+                      value={guestHouse.website || ''}
                       onChange={(e) => setGuestHouse({ ...guestHouse, website: e.target.value })}
                       disabled={!isEditing}
                       style={styles.input}
@@ -228,7 +293,7 @@ export default function Settings() {
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Address</label>
                   <textarea
-                    value={guestHouse.address}
+                    value={guestHouse.address || ''}
                     onChange={(e) => setGuestHouse({ ...guestHouse, address: e.target.value })}
                     disabled={!isEditing}
                     style={{ ...styles.input, minHeight: '80px' }}
@@ -240,7 +305,7 @@ export default function Settings() {
                     <label style={styles.label}>TIN No.</label>
                     <input
                       type="text"
-                      value={guestHouse.tin_no}
+                      value={guestHouse.tin_no || ''}
                       onChange={(e) => setGuestHouse({ ...guestHouse, tin_no: e.target.value })}
                       disabled={!isEditing}
                       style={styles.input}
@@ -250,7 +315,7 @@ export default function Settings() {
                     <label style={styles.label}>Permit No.</label>
                     <input
                       type="text"
-                      value={guestHouse.permit_no}
+                      value={guestHouse.permit_no || ''}
                       onChange={(e) => setGuestHouse({ ...guestHouse, permit_no: e.target.value })}
                       disabled={!isEditing}
                       style={styles.input}
@@ -263,7 +328,7 @@ export default function Settings() {
                     <label style={styles.label}>Company Name</label>
                     <input
                       type="text"
-                      value={guestHouse.company_name}
+                      value={guestHouse.company_name || ''}
                       onChange={(e) => setGuestHouse({ ...guestHouse, company_name: e.target.value })}
                       disabled={!isEditing}
                       style={styles.input}
@@ -273,7 +338,7 @@ export default function Settings() {
                     <label style={styles.label}>Company Reg. No.</label>
                     <input
                       type="text"
-                      value={guestHouse.company_reg_no}
+                      value={guestHouse.company_reg_no || ''}
                       onChange={(e) => setGuestHouse({ ...guestHouse, company_reg_no: e.target.value })}
                       disabled={!isEditing}
                       style={styles.input}
@@ -367,42 +432,6 @@ export default function Settings() {
         </>
       )}
 
-      {activeTab === 'general' && (
-        <div style={styles.card}>
-          <div style={styles.section}>
-            <h3 style={styles.cardTitle}>Appearance</h3>
-            <div style={styles.settingRow}>
-              <div style={styles.settingInfo}>
-                {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
-                <div>
-                  <span style={styles.settingLabel}>Theme</span>
-                  <span style={styles.settingValue}>{theme === 'dark' ? 'Dark' : 'Light'} Mode</span>
-                </div>
-              </div>
-              <button onClick={toggleTheme} style={styles.toggleBtn}>
-                Switch to {theme === 'dark' ? 'Light' : 'Dark'}
-              </button>
-            </div>
-          </div>
-
-          <div style={{ ...styles.section, borderTop: '1px solid var(--border)' }}>
-            <h3 style={styles.cardTitle}>Notifications</h3>
-            <div style={styles.settingRow}>
-              <div style={styles.settingInfo}>
-                <Bell size={20} />
-                <div>
-                  <span style={styles.settingLabel}>Push Notifications</span>
-                  <span style={styles.settingValue}>{notifications ? 'Enabled' : 'Disabled'}</span>
-                </div>
-              </div>
-              <button onClick={() => setNotifications(!notifications)} style={styles.toggleBtn}>
-                {notifications ? 'Disable' : 'Enable'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {showRoomTypeModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
@@ -464,7 +493,7 @@ export default function Settings() {
                 <label style={styles.label}>Room Type</label>
                 <select
                   value={roomForm.room_type_id || ''}
-                  onChange={(e) => setRoomForm({ ...roomForm, room_type_id: Number(e.target.value) })}
+                  onChange={(e) => setRoomForm({ ...roomForm, room_type_id: e.target.value })}
                   style={styles.input}
                 >
                   <option value="">Select Room Type</option>
@@ -687,42 +716,6 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   tr: {
     borderBottom: '1px solid var(--border)',
-  },
-  section: {
-    padding: '20px',
-  },
-  settingRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px 0',
-  },
-  settingInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    color: 'var(--text-muted)',
-  },
-  settingLabel: {
-    display: 'block',
-    fontSize: '14px',
-    fontWeight: 500,
-    color: 'var(--text-primary)',
-  },
-  settingValue: {
-    display: 'block',
-    fontSize: '12px',
-    color: 'var(--text-muted)',
-  },
-  toggleBtn: {
-    padding: '8px 16px',
-    backgroundColor: 'var(--background-tertiary)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--border-radius)',
-    color: 'var(--text-primary)',
-    fontSize: '13px',
-    fontWeight: 500,
-    cursor: 'pointer',
   },
   modalOverlay: {
     position: 'fixed',
