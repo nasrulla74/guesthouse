@@ -32,6 +32,12 @@ interface Room {
   size: string
 }
 
+interface Country {
+  id: string
+  country_name: string
+  is_active: boolean
+}
+
 interface Operator {
   id: string
   name: string
@@ -45,7 +51,7 @@ interface Operator {
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<'guestHouse' | 'general'>('guestHouse')
-  const [guestHouseTab, setGuestHouseTab] = useState<'info' | 'roomTypes' | 'rooms' | 'operators'>('info')
+  const [guestHouseTab, setGuestHouseTab] = useState<'info' | 'roomTypes' | 'rooms' | 'operators' | 'countries'>('info')
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -67,18 +73,22 @@ export default function Settings() {
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
   const [operators, setOperators] = useState<Operator[]>([])
+  const [countries, setCountries] = useState<Country[]>([])
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [roomTypeForm, setRoomTypeForm] = useState<Partial<RoomType>>({})
   const [roomForm, setRoomForm] = useState<Partial<Room>>({})
   const [operatorForm, setOperatorForm] = useState<Partial<Operator>>({ is_active: true })
+  const [countryForm, setCountryForm] = useState<Partial<Country>>({ is_active: true })
   const [showRoomTypeModal, setShowRoomTypeModal] = useState(false)
   const [showRoomModal, setShowRoomModal] = useState(false)
   const [showOperatorModal, setShowOperatorModal] = useState(false)
+  const [showCountryModal, setShowCountryModal] = useState(false)
   const [editingRoomType, setEditingRoomType] = useState<RoomType | null>(null)
   const [editingRoom, setEditingRoom] = useState<Room | null>(null)
   const [editingOperator, setEditingOperator] = useState<Operator | null>(null)
+  const [editingCountry, setEditingCountry] = useState<Country | null>(null)
   const { theme, toggleTheme } = useTheme()
   const [notifications, setNotifications] = useState(true)
 
@@ -89,11 +99,12 @@ export default function Settings() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [ghResult, rtResult, rResult, opResult] = await Promise.all([
+      const [ghResult, rtResult, rResult, opResult, countryResult] = await Promise.all([
         supabase.from('guest_houses').select('*').limit(1).single(),
         supabase.from('room_types').select('*'),
         supabase.from('rooms').select('*'),
-        supabase.from('customers').select('*').order('name')
+        supabase.from('customers').select('*').order('name'),
+        supabase.from('countries').select('*').order('country_name')
       ])
 
       if (ghResult.data) {
@@ -122,6 +133,7 @@ export default function Settings() {
       if (rtResult.data) setRoomTypes(rtResult.data)
       if (rResult.data) setRooms(rResult.data)
       if (opResult.data) setOperators(opResult.data)
+      if (countryResult.data) setCountries(countryResult.data)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -423,6 +435,71 @@ export default function Settings() {
     setOperatorForm({ is_active: true })
   }
 
+  const handleAddCountry = async () => {
+    if (!countryForm.country_name) return
+    try {
+      const { data, error } = await supabase
+        .from('countries')
+        .insert({
+          country_name: countryForm.country_name,
+          is_active: countryForm.is_active ?? true
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      if (data) setCountries([...countries, data])
+      setCountryForm({ is_active: true })
+      setShowCountryModal(false)
+    } catch (error) {
+      console.error('Error adding country:', error)
+    }
+  }
+
+  const handleDeleteCountry = async (id: string) => {
+    try {
+      const { error } = await supabase.from('countries').delete().eq('id', id)
+      if (error) throw error
+      setCountries(countries.filter(c => c.id !== id))
+    } catch (error) {
+      console.error('Error deleting country:', error)
+    }
+  }
+
+  const handleEditCountry = (country: Country) => {
+    setEditingCountry(country)
+    setCountryForm({ country_name: country.country_name, is_active: country.is_active })
+    setShowCountryModal(true)
+  }
+
+  const handleUpdateCountry = async () => {
+    if (!editingCountry || !countryForm.country_name) return
+    try {
+      const { error } = await supabase
+        .from('countries')
+        .update({
+          country_name: countryForm.country_name,
+          is_active: countryForm.is_active ?? true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingCountry.id)
+
+      if (error) throw error
+      setCountries(countries.map(c => c.id === editingCountry.id ? { ...c, ...countryForm } as Country : c))
+      setEditingCountry(null)
+      setCountryForm({ is_active: true })
+      setShowCountryModal(false)
+    } catch (error) {
+      console.error('Error updating country:', error)
+    }
+  }
+
+  const closeCountryModal = () => {
+    setShowCountryModal(false)
+    setEditingCountry(null)
+    setCountryForm({ is_active: true })
+  }
+
   if (loading) {
     return (
       <div style={{ ...styles.container, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -478,6 +555,12 @@ export default function Settings() {
               onClick={() => setGuestHouseTab('operators')}
             >
               Operators
+            </button>
+            <button
+              style={{ ...styles.subTab, ...(guestHouseTab === 'countries' ? styles.activeSubTab : {}) }}
+              onClick={() => setGuestHouseTab('countries')}
+            >
+              Countries
             </button>
           </div>
 
@@ -784,6 +867,48 @@ export default function Settings() {
               </table>
             </div>
           )}
+
+          {guestHouseTab === 'countries' && (
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <h3 style={styles.cardTitle}>Countries</h3>
+                <button onClick={() => { setEditingCountry(null); setCountryForm({ is_active: true }); setShowCountryModal(true); }} style={styles.addBtn}>
+                  <Plus size={16} /> Add Country
+                </button>
+              </div>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Country Name</th>
+                    <th style={styles.th}>Status</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {countries.map((country) => (
+                    <tr key={country.id} style={styles.tr}>
+                      <td style={styles.td}>{country.country_name}</td>
+                      <td style={styles.td}>
+                        <span style={{ color: country.is_active ? '#4CAF50' : '#FF6B6B', fontSize: '12px' }}>
+                          {country.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => handleEditCountry(country)} style={styles.editBtnTable}>
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={() => handleDeleteCountry(country.id)} style={styles.deleteBtn}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 
@@ -997,6 +1122,48 @@ export default function Settings() {
               <button onClick={closeOperatorModal} style={styles.cancelBtn}>Cancel</button>
               <button onClick={editingOperator ? handleUpdateOperator : handleAddOperator} style={styles.saveBtn}>
                 {editingOperator ? 'Update' : 'Add'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCountryModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modal}>
+            <div style={styles.modalHeader}>
+              <h3>{editingCountry ? 'Edit Country' : 'Add Country'}</h3>
+              <button onClick={closeCountryModal} style={styles.closeBtn}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={styles.modalBody}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Country Name *</label>
+                <input
+                  type="text"
+                  value={countryForm.country_name || ''}
+                  onChange={(e) => setCountryForm({ ...countryForm, country_name: e.target.value })}
+                  placeholder="e.g. United States"
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={countryForm.is_active ?? true}
+                    onChange={(e) => setCountryForm({ ...countryForm, is_active: e.target.checked })}
+                    style={styles.checkbox}
+                  />
+                  Active
+                </label>
+              </div>
+            </div>
+            <div style={styles.modalFooter}>
+              <button onClick={closeCountryModal} style={styles.cancelBtn}>Cancel</button>
+              <button onClick={editingCountry ? handleUpdateCountry : handleAddCountry} style={styles.saveBtn}>
+                {editingCountry ? 'Update' : 'Add'}
               </button>
             </div>
           </div>

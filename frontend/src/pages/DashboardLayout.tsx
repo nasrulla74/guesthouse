@@ -30,12 +30,6 @@ export default function DashboardLayout() {
         { label: 'Bookings', path: '/dashboard/bookings', active: true }
       ]
     }
-    if (path.includes('countries')) {
-      return [
-        { label: 'Dashboard', path: '/dashboard' },
-        { label: 'Countries', path: '/dashboard/countries', active: true }
-      ]
-    }
     if (path.includes('settings')) {
       return [
         { label: 'Dashboard', path: '/dashboard' },
@@ -96,7 +90,7 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        {!location.pathname.includes('settings') && !location.pathname.includes('bookings') && !location.pathname.includes('countries') && (
+        {!location.pathname.includes('settings') && !location.pathname.includes('bookings') && (
           <div style={styles.header}>
             <div style={styles.iconBox}>
               <Users size={24} style={{ color: 'var(--text-primary)' }} />

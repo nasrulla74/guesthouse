@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Home, Users, Calendar, CreditCard, Settings, LogOut, Star, ChevronLeft, ChevronRight, X, Globe } from 'lucide-react'
+import { Home, Users, Calendar, CreditCard, Settings, LogOut, Star, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -8,7 +8,6 @@ const menuItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
   { icon: Users, label: 'Guests', path: '/dashboard/guests' },
   { icon: Calendar, label: 'Bookings', path: '/dashboard/bookings' },
-  { icon: Globe, label: 'Countries', path: '/dashboard/countries' },
   { icon: CreditCard, label: 'Payments', path: '/dashboard/payments' },
   { icon: Star, label: 'Reviews', path: '/dashboard/reviews' },
   { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
