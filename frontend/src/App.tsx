@@ -3,7 +3,8 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
-import Dashboard from './pages/Dashboard'
+import DashboardLayout from './pages/DashboardLayout'
+import DashboardHome from './pages/DashboardHome'
 import Settings from './pages/Settings'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -26,18 +27,13 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <DashboardLayout />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/dashboard/settings"
-        element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route index element={<DashboardHome />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

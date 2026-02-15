@@ -1,16 +1,26 @@
 import { useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import { Home, ChevronRight, Star, MoreHorizontal, Users, Sun, Moon, Menu } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
-import StatsCards from '../components/StatsCards'
-import ReviewTable from '../components/ReviewTable'
 import { useTheme } from '../context/ThemeContext'
 
-export default function Dashboard() {
+export default function DashboardLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { theme, toggleTheme } = useTheme()
+  const location = useLocation()
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
+  const getBreadcrumb = () => {
+    const path = location.pathname
+    if (path.includes('settings')) {
+      return { current: 'Settings' }
+    }
+    return { current: 'Guests Reviews' }
+  }
+
+  const breadcrumb = getBreadcrumb()
 
   return (
     <div style={styles.container}>
@@ -38,7 +48,7 @@ export default function Dashboard() {
               <ChevronRight size={14} style={styles.chevron} />
               <span style={styles.breadcrumbText}>Manage Guests</span>
               <ChevronRight size={14} style={styles.chevron} />
-              <span style={styles.breadcrumbActive}>Guests Reviews</span>
+              <span style={styles.breadcrumbActive}>{breadcrumb.current}</span>
             </nav>
           </div>
           <div style={styles.actions}>
@@ -51,21 +61,22 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={styles.header}>
-          <div style={styles.iconBox}>
-            <Users size={isMobile ? 24 : 32} style={{ color: 'var(--text-primary)' }} />
-          </div>
-          <div>
-            <div style={styles.titleRow}>
-              <h1 style={{...styles.title, fontSize: isMobile ? '18px' : '24px'}}>Overview & Reviews</h1>
-              <Star size={20} style={{ color: 'var(--text-muted)', cursor: 'pointer' }} />
+        {breadcrumb.current !== 'Settings' && (
+          <div style={styles.header}>
+            <div style={styles.iconBox}>
+              <Users size={isMobile ? 24 : 32} style={{ color: 'var(--text-primary)' }} />
             </div>
-            <p style={styles.subtitle}>Auto-updates in 2 min</p>
+            <div>
+              <div style={styles.titleRow}>
+                <h1 style={{...styles.title, fontSize: isMobile ? '18px' : '24px'}}>Overview & Reviews</h1>
+                <Star size={20} style={{ color: 'var(--text-muted)', cursor: 'pointer' }} />
+              </div>
+              <p style={styles.subtitle}>Auto-updates in 2 min</p>
+            </div>
           </div>
-        </div>
+        )}
 
-        <StatsCards />
-        <ReviewTable />
+        <Outlet />
       </main>
       {mobileMenuOpen && isMobile && (
         <div style={styles.overlay} onClick={() => setMobileMenuOpen(false)} />
