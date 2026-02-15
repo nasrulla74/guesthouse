@@ -24,6 +24,12 @@ export default function DashboardLayout() {
 
   const getBreadcrumb = () => {
     const path = location.pathname
+    if (path.includes('bookings')) {
+      return [
+        { label: 'Dashboard', path: '/dashboard' },
+        { label: 'Bookings', path: '/dashboard/bookings', active: true }
+      ]
+    }
     if (path.includes('settings')) {
       return [
         { label: 'Dashboard', path: '/dashboard' },
@@ -84,7 +90,7 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        {!location.pathname.includes('settings') && (
+        {!location.pathname.includes('settings') && !location.pathname.includes('bookings') && (
           <div style={styles.header}>
             <div style={styles.iconBox}>
               <Users size={24} style={{ color: 'var(--text-primary)' }} />
