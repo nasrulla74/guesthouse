@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Save, Edit2, Plus, X, Trash2, Building2, Bed, DoorOpen, Sun, Moon, Bell } from 'lucide-react'
+import { Save, Edit2, Plus, X, Trash2, Sun, Moon, Bell } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 
 interface GuestHouse {
