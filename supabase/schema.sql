@@ -90,15 +90,32 @@ INSERT INTO rooms (room_no, room_type_id, size)
 SELECT '102', id, '250 sqft' FROM room_types WHERE name = 'Standard AC' LIMIT 1
 ON CONFLICT DO NOTHING;
 
+-- Customers Table
+CREATE TABLE IF NOT EXISTS customers (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    cu_type VARCHAR(50) NOT NULL CHECK (cu_type IN ('OTA', 'Tour Operator', 'FIT')),
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    address TEXT,
+    country VARCHAR(100),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_room_types_gh_id ON room_types(gh_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_room_type_id ON rooms(room_type_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_room_no ON rooms(room_no);
+CREATE INDEX IF NOT EXISTS idx_customers_cu_type ON customers(cu_type);
+CREATE INDEX IF NOT EXISTS idx_customers_country ON customers(country);
 
 -- Enable Row Level Security
 ALTER TABLE guest_houses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE room_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for anon access (adjust as needed for your security requirements)
 CREATE POLICY "Allow anon read guest_houses" ON guest_houses FOR SELECT USING (true);
@@ -115,6 +132,11 @@ CREATE POLICY "Allow anon read rooms" ON rooms FOR SELECT USING (true);
 CREATE POLICY "Allow anon insert rooms" ON rooms FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anon update rooms" ON rooms FOR UPDATE USING (true);
 CREATE POLICY "Allow anon delete rooms" ON rooms FOR DELETE USING (true);
+
+CREATE POLICY "Allow anon read customers" ON customers FOR SELECT USING (true);
+CREATE POLICY "Allow anon insert customers" ON customers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon update customers" ON customers FOR UPDATE USING (true);
+CREATE POLICY "Allow anon delete customers" ON customers FOR DELETE USING (true);
 
 -- Storage bucket policies for images bucket
 CREATE POLICY "Allow public read access" ON storage.objects FOR SELECT USING (bucket_id = 'images');
