@@ -113,6 +113,15 @@ CREATE TABLE IF NOT EXISTS countries (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Meal Plans Table
+CREATE TABLE IF NOT EXISTS meal_plans (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    meal_code VARCHAR(20) NOT NULL,
+    meal_plan VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_room_types_gh_id ON room_types(gh_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_room_type_id ON rooms(room_type_id);
@@ -120,6 +129,7 @@ CREATE INDEX IF NOT EXISTS idx_rooms_room_no ON rooms(room_no);
 CREATE INDEX IF NOT EXISTS idx_customers_cu_type ON customers(cu_type);
 CREATE INDEX IF NOT EXISTS idx_customers_country ON customers(country);
 CREATE INDEX IF NOT EXISTS idx_countries_country_name ON countries(country_name);
+CREATE INDEX IF NOT EXISTS idx_meal_plans_meal_code ON meal_plans(meal_code);
 
 -- Enable Row Level Security
 ALTER TABLE guest_houses ENABLE ROW LEVEL SECURITY;
@@ -127,6 +137,7 @@ ALTER TABLE room_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE countries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_plans ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for anon access (adjust as needed for your security requirements)
 CREATE POLICY "Allow anon read guest_houses" ON guest_houses FOR SELECT USING (true);
@@ -153,6 +164,11 @@ CREATE POLICY "Allow anon read countries" ON countries FOR SELECT USING (true);
 CREATE POLICY "Allow anon insert countries" ON countries FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anon update countries" ON countries FOR UPDATE USING (true);
 CREATE POLICY "Allow anon delete countries" ON countries FOR DELETE USING (true);
+
+CREATE POLICY "Allow anon read meal_plans" ON meal_plans FOR SELECT USING (true);
+CREATE POLICY "Allow anon insert meal_plans" ON meal_plans FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon update meal_plans" ON meal_plans FOR UPDATE USING (true);
+CREATE POLICY "Allow anon delete meal_plans" ON meal_plans FOR DELETE USING (true);
 
 -- Storage bucket policies for images bucket
 CREATE POLICY "Allow public read access" ON storage.objects FOR SELECT USING (bucket_id = 'images');

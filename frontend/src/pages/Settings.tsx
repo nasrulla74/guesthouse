@@ -38,6 +38,12 @@ interface Country {
   is_active: boolean
 }
 
+interface MealPlan {
+  id: string
+  meal_code: string
+  meal_plan: string
+}
+
 interface Operator {
   id: string
   name: string
@@ -51,7 +57,7 @@ interface Operator {
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<'guestHouse' | 'general'>('guestHouse')
-  const [guestHouseTab, setGuestHouseTab] = useState<'info' | 'roomTypes' | 'rooms' | 'operators' | 'countries'>('info')
+  const [guestHouseTab, setGuestHouseTab] = useState<'info' | 'roomTypes' | 'rooms' | 'operators' | 'countries' | 'mealPlans'>('info')
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -74,6 +80,7 @@ export default function Settings() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [operators, setOperators] = useState<Operator[]>([])
   const [countries, setCountries] = useState<Country[]>([])
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -81,14 +88,17 @@ export default function Settings() {
   const [roomForm, setRoomForm] = useState<Partial<Room>>({})
   const [operatorForm, setOperatorForm] = useState<Partial<Operator>>({ is_active: true })
   const [countryForm, setCountryForm] = useState<Partial<Country>>({ is_active: true })
+  const [mealPlanForm, setMealPlanForm] = useState<Partial<MealPlan>>({})
   const [showRoomTypeModal, setShowRoomTypeModal] = useState(false)
   const [showRoomModal, setShowRoomModal] = useState(false)
   const [showOperatorModal, setShowOperatorModal] = useState(false)
   const [showCountryModal, setShowCountryModal] = useState(false)
+  const [showMealPlanModal, setShowMealPlanModal] = useState(false)
   const [editingRoomType, setEditingRoomType] = useState<RoomType | null>(null)
   const [editingRoom, setEditingRoom] = useState<Room | null>(null)
   const [editingOperator, setEditingOperator] = useState<Operator | null>(null)
   const [editingCountry, setEditingCountry] = useState<Country | null>(null)
+  const [editingMealPlan, setEditingMealPlan] = useState<MealPlan | null>(null)
   const { theme, toggleTheme } = useTheme()
   const [notifications, setNotifications] = useState(true)
 
@@ -99,12 +109,13 @@ export default function Settings() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [ghResult, rtResult, rResult, opResult, countryResult] = await Promise.all([
+      const [ghResult, rtResult, rResult, opResult, countryResult, mealPlanResult] = await Promise.all([
         supabase.from('guest_houses').select('*').limit(1).single(),
         supabase.from('room_types').select('*'),
         supabase.from('rooms').select('*'),
         supabase.from('customers').select('*').order('name'),
-        supabase.from('countries').select('*').order('country_name')
+        supabase.from('countries').select('*').order('country_name'),
+        supabase.from('meal_plans').select('*').order('meal_code')
       ])
 
       if (ghResult.data) {
@@ -134,6 +145,7 @@ export default function Settings() {
       if (rResult.data) setRooms(rResult.data)
       if (opResult.data) setOperators(opResult.data)
       if (countryResult.data) setCountries(countryResult.data)
+      if (mealPlanResult.data) setMealPlans(mealPlanResult.data)
       
       if (!countryResult.data || countryResult.data.length === 0) {
         await seedCountries()
@@ -544,6 +556,61 @@ export default function Settings() {
     setCountryForm({ is_active: true })
   }
 
+  const handleAddMealPlan = async () => {
+    if (!mealPlanForm.meal_code || !mealPlanForm.meal_plan) return
+    try {
+      const { data, error } = await supabase
+        .from('meal_plans')
+        .insert({
+          meal_code: mealPlanForm.meal_code,
+          meal_plan: mealPlanForm.meal_plan
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      if (data) setMealPlans([...mealPlans, data])
+      setMealPlanForm({})
+      setShowMealPlanModal(false)
+    } catch (error) {
+      console.error('Error adding meal plan:', error)
+    }
+  }
+
+  const handleEditMealPlan = (mealPlan: MealPlan) => {
+    setEditingMealPlan(mealPlan)
+    setMealPlanForm({ meal_code: mealPlan.meal_code, meal_plan: mealPlan.meal_plan })
+    setShowMealPlanModal(true)
+  }
+
+  const handleUpdateMealPlan = async () => {
+    if (!editingMealPlan || !mealPlanForm.meal_code || !mealPlanForm.meal_plan) return
+    try {
+      const { error } = await supabase
+        .from('meal_plans')
+        .update({
+          meal_code: mealPlanForm.meal_code,
+          meal_plan: mealPlanForm.meal_plan,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingMealPlan.id)
+
+      if (error) throw error
+      setMealPlans(mealPlans.map(mp => mp.id === editingMealPlan.id ? { ...mp, ...mealPlanForm } as MealPlan : mp))
+      setEditingMealPlan(null)
+      setMealPlanForm({})
+      setShowMealPlanModal(false)
+    } catch (error) {
+      console.error('Error updating meal plan:', error)
+    }
+  }
+
+  const closeMealPlanModal = () => {
+    setShowMealPlanModal(false)
+    setEditingMealPlan(null)
+    setMealPlanForm({})
+  }
+
   if (loading) {
     return (
       <div style={{ ...styles.container, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -605,6 +672,12 @@ export default function Settings() {
               onClick={() => setGuestHouseTab('countries')}
             >
               Countries
+            </button>
+            <button
+              style={{ ...styles.subTab, ...(guestHouseTab === 'mealPlans' ? styles.activeSubTab : {}) }}
+              onClick={() => setGuestHouseTab('mealPlans')}
+            >
+              Meal Plans
             </button>
           </div>
 
@@ -948,6 +1021,39 @@ export default function Settings() {
               </table>
             </div>
           )}
+
+          {guestHouseTab === 'mealPlans' && (
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <h3 style={styles.cardTitle}>Meal Plans</h3>
+                <button onClick={() => { setEditingMealPlan(null); setMealPlanForm({}); setShowMealPlanModal(true); }} style={styles.addBtn}>
+                  <Plus size={16} /> Add Meal Plan
+                </button>
+              </div>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Meal Code</th>
+                    <th style={styles.th}>Meal Plan</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mealPlans.map((mp) => (
+                    <tr key={mp.id} style={styles.tr}>
+                      <td style={styles.td}>{mp.meal_code}</td>
+                      <td style={styles.td}>{mp.meal_plan}</td>
+                      <td style={styles.td}>
+                        <button onClick={() => handleEditMealPlan(mp)} style={styles.editBtnTable}>
+                          <Edit2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 
@@ -1203,6 +1309,47 @@ export default function Settings() {
               <button onClick={closeCountryModal} style={styles.cancelBtn}>Cancel</button>
               <button onClick={editingCountry ? handleUpdateCountry : handleAddCountry} style={styles.saveBtn}>
                 {editingCountry ? 'Update' : 'Add'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMealPlanModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modal}>
+            <div style={styles.modalHeader}>
+              <h3>{editingMealPlan ? 'Edit Meal Plan' : 'Add Meal Plan'}</h3>
+              <button onClick={closeMealPlanModal} style={styles.closeBtn}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={styles.modalBody}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Meal Code *</label>
+                <input
+                  type="text"
+                  value={mealPlanForm.meal_code || ''}
+                  onChange={(e) => setMealPlanForm({ ...mealPlanForm, meal_code: e.target.value })}
+                  placeholder="e.g. BB"
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Meal Plan *</label>
+                <input
+                  type="text"
+                  value={mealPlanForm.meal_plan || ''}
+                  onChange={(e) => setMealPlanForm({ ...mealPlanForm, meal_plan: e.target.value })}
+                  placeholder="e.g. Bed & Breakfast"
+                  style={styles.input}
+                />
+              </div>
+            </div>
+            <div style={styles.modalFooter}>
+              <button onClick={closeMealPlanModal} style={styles.cancelBtn}>Cancel</button>
+              <button onClick={editingMealPlan ? handleUpdateMealPlan : handleAddMealPlan} style={styles.saveBtn}>
+                {editingMealPlan ? 'Update' : 'Add'}
               </button>
             </div>
           </div>
