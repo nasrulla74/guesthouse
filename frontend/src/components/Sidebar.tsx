@@ -1,5 +1,6 @@
 import { Home, Users, Calendar, CreditCard, Settings, LogOut, Star } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
@@ -12,6 +13,13 @@ const menuItems = [
 
 export default function Sidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { signOut } = useAuth()
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/login')
+  }
 
   return (
     <aside style={styles.sidebar}>
@@ -40,7 +48,7 @@ export default function Sidebar() {
       </nav>
 
       <div style={styles.bottom}>
-        <button style={styles.navItem}>
+        <button onClick={handleSignOut} style={styles.navItem}>
           <LogOut size={18} />
           <span>Sign Out</span>
         </button>
