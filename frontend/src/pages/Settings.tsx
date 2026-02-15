@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Save, Edit2, Plus, X, Trash2, Sun, Moon, Bell, Loader2 } from 'lucide-react'
+import { Save, Edit2, Plus, X, Trash2, Loader2 } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
 
 interface GuestHouse {
@@ -47,6 +48,8 @@ export default function Settings() {
   const [showRoomModal, setShowRoomModal] = useState(false)
   const [editingRoomType, setEditingRoomType] = useState<RoomType | null>(null)
   const [editingRoom, setEditingRoom] = useState<Room | null>(null)
+  const { theme, toggleTheme } = useTheme()
+  const [notifications, setNotifications] = useState(true)
 
   useEffect(() => {
     fetchData()
@@ -501,6 +504,40 @@ export default function Settings() {
         </>
       )}
 
+      {activeTab === 'general' && (
+        <div style={styles.card}>
+          <div style={styles.section}>
+            <h3 style={styles.cardTitle}>Appearance</h3>
+            <div style={styles.settingRow}>
+              <div style={styles.settingInfo}>
+                <div>
+                  <span style={styles.settingLabel}>Theme</span>
+                  <span style={styles.settingValue}>{theme === 'dark' ? 'Dark' : 'Light'} Mode</span>
+                </div>
+              </div>
+              <button onClick={toggleTheme} style={styles.toggleBtn}>
+                Switch to {theme === 'dark' ? 'Light' : 'Dark'}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ ...styles.section, borderTop: '1px solid var(--border)' }}>
+            <h3 style={styles.cardTitle}>Notifications</h3>
+            <div style={styles.settingRow}>
+              <div style={styles.settingInfo}>
+                <div>
+                  <span style={styles.settingLabel}>Push Notifications</span>
+                  <span style={styles.settingValue}>{notifications ? 'Enabled' : 'Disabled'}</span>
+                </div>
+              </div>
+              <button onClick={() => setNotifications(!notifications)} style={styles.toggleBtn}>
+                {notifications ? 'Disable' : 'Enable'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showRoomTypeModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
@@ -663,6 +700,42 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 600,
     color: 'var(--text-primary)',
     margin: 0,
+  },
+  section: {
+    padding: '20px',
+  },
+  settingRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '12px 0',
+  },
+  settingInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    color: 'var(--text-muted)',
+  },
+  settingLabel: {
+    display: 'block',
+    fontSize: '14px',
+    fontWeight: 500,
+    color: 'var(--text-primary)',
+  },
+  settingValue: {
+    display: 'block',
+    fontSize: '12px',
+    color: 'var(--text-muted)',
+  },
+  toggleBtn: {
+    padding: '8px 16px',
+    backgroundColor: 'var(--background-tertiary)',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--border-radius)',
+    color: 'var(--text-primary)',
+    fontSize: '13px',
+    fontWeight: 500,
+    cursor: 'pointer',
   },
   headerActions: {
     display: 'flex',
