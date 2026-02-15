@@ -952,7 +952,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '4px',
   },
   label: {
-    fontSize: '11px',
+    fontSize: '12px',
     fontWeight: 500,
     color: 'var(--text-muted)',
   },
@@ -962,7 +962,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid var(--border)',
     backgroundColor: 'var(--background-tertiary)',
     color: 'var(--text-primary)',
-    fontSize: '14px',
+    fontSize: '12px',
     outline: 'none',
   },
   checkboxLabel: {

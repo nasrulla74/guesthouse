@@ -99,7 +99,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: 'calc(var(--spacing) * 1.5)',
     borderRadius: 'var(--border-radius)',
     border: '1px solid var(--border)',
-    fontSize: '14px',
+    fontSize: '12px',
     backgroundColor: 'var(--background-tertiary)',
     color: 'var(--text-primary)',
     outline: 'none',
