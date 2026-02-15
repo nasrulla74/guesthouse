@@ -47,7 +47,7 @@ export default function DashboardLayout() {
       />
       <main style={{ 
         ...styles.main, 
-        marginLeft: isMobile ? 0 : (sidebarCollapsed ? '80px' : '256px'),
+        marginLeft: isMobile ? 0 : (sidebarCollapsed ? '64px' : '200px'),
       }}>
         <div style={styles.topBarBg}>
           <span style={styles.topBarText}>{guestHouseName}</span>
