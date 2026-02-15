@@ -127,8 +127,6 @@ const styles: { [key: string]: React.CSSProperties } = {
   topBarBg: {
     backgroundColor: 'var(--primary)',
     padding: '10px 16px',
-    marginBottom: '20px',
-    borderRadius: '8px',
   },
   topBarText: {
     color: 'white',
@@ -139,6 +137,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: '16px',
     marginBottom: '24px',
     flexWrap: 'wrap',
     gap: '12px',
