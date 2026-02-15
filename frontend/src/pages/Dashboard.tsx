@@ -36,12 +36,12 @@ export default function Dashboard() {
 
         <div style={styles.header}>
           <div style={styles.iconBox}>
-            <Users size={32} style={{ color: '#FAFAFA' }} />
+            <Users size={32} style={{ color: 'var(--text-primary)' }} />
           </div>
           <div>
             <div style={styles.titleRow}>
               <h1 style={styles.title}>Overview & Reviews</h1>
-              <Star size={20} style={{ color: '#444', cursor: 'pointer' }} />
+              <Star size={20} style={{ color: 'var(--text-muted)', cursor: 'pointer' }} />
             </div>
             <p style={styles.subtitle}>Auto-updates in 2 min</p>
           </div>
@@ -57,7 +57,7 @@ export default function Dashboard() {
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#121212',
+    backgroundColor: 'var(--background)',
     display: 'flex',
   },
   main: {
@@ -77,22 +77,22 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '8px',
     fontSize: '12px',
     fontWeight: 500,
-    color: '#666',
+    color: 'var(--text-muted)',
   },
   breadcrumbIcon: {
     cursor: 'pointer',
-    color: '#666',
+    color: 'var(--text-muted)',
   },
   breadcrumbText: {
     cursor: 'pointer',
-    color: '#666',
+    color: 'var(--text-muted)',
   },
   breadcrumbActive: {
-    color: '#006239',
+    color: 'var(--primary)',
     fontWeight: 700,
   },
   chevron: {
-    color: '#444',
+    color: 'var(--border)',
   },
   actions: {
     display: 'flex',
@@ -103,24 +103,24 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: '36px',
     height: '36px',
     borderRadius: '8px',
-    backgroundColor: '#1E1E1E',
-    border: '1px solid #333',
+    backgroundColor: 'var(--background-secondary)',
+    border: '1px solid var(--border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#888',
+    color: 'var(--text-secondary)',
     cursor: 'pointer',
   },
   moreButton: {
     width: '32px',
     height: '32px',
     borderRadius: '8px',
-    backgroundColor: '#1E1E1E',
-    border: '1px solid #333',
+    backgroundColor: 'var(--background-secondary)',
+    border: '1px solid var(--border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#666',
+    color: 'var(--text-muted)',
     cursor: 'pointer',
   },
   header: {
@@ -132,12 +132,12 @@ const styles: { [key: string]: React.CSSProperties } = {
   iconBox: {
     width: '64px',
     height: '64px',
-    backgroundColor: '#333',
+    backgroundColor: 'var(--background-tertiary)',
     borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
   },
   titleRow: {
     display: 'flex',
@@ -147,12 +147,12 @@ const styles: { [key: string]: React.CSSProperties } = {
   title: {
     fontSize: '24px',
     fontWeight: 700,
-    color: '#FAFAFA',
+    color: 'var(--text-primary)',
     margin: 0,
   },
   subtitle: {
     fontSize: '12px',
-    color: '#666',
+    color: 'var(--text-muted)',
     fontWeight: 500,
     marginTop: '4px',
     fontStyle: 'italic',

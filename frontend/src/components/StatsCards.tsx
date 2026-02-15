@@ -37,10 +37,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginBottom: '32px',
   },
   card: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'var(--background-secondary)',
     padding: '24px',
-    borderRadius: '0px',
-    border: '1px solid #333',
+    borderRadius: 'var(--border-radius)',
+    border: '1px solid var(--border)',
   },
   cardHeader: {
     display: 'flex',
@@ -59,20 +59,21 @@ const styles: { [key: string]: React.CSSProperties } = {
   change: {
     fontSize: '12px',
     fontWeight: 600,
-    color: '#006239',
-    backgroundColor: '#00623920',
+    color: 'var(--primary)',
+    backgroundColor: 'var(--primary)',
     padding: '4px 8px',
     borderRadius: '4px',
+    opacity: 0.2,
   },
   value: {
     fontSize: '28px',
     fontWeight: 700,
-    color: '#FAFAFA',
+    color: 'var(--text-primary)',
     marginBottom: '4px',
   },
   label: {
     fontSize: '12px',
-    color: '#888',
+    color: 'var(--text-muted)',
     fontWeight: 500,
   },
 }

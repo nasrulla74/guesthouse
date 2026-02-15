@@ -42,7 +42,7 @@ export default function ReviewTable() {
                       key={i}
                       size={14}
                       fill={i < review.rating ? '#FFB800' : 'none'}
-                      color={i < review.rating ? '#FFB800' : '#444'}
+                      color={i < review.rating ? '#FFB800' : 'var(--border)'}
                     />
                   ))}
                 </div>
@@ -52,8 +52,8 @@ export default function ReviewTable() {
               <td style={styles.td}>
                 <span style={{
                   ...styles.status,
-                  backgroundColor: review.status === 'Published' ? '#00623920' : '#FFB80020',
-                  color: review.status === 'Published' ? '#006239' : '#FFB800',
+                  backgroundColor: review.status === 'Published' ? 'var(--primary)' + '20' : '#FFB80020',
+                  color: review.status === 'Published' ? 'var(--primary)' : '#FFB800',
                 }}>
                   {review.status}
                 </span>
@@ -73,9 +73,9 @@ export default function ReviewTable() {
 
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: '0px',
-    border: '1px solid #333',
+    backgroundColor: 'var(--background-secondary)',
+    borderRadius: 'var(--border-radius)',
+    border: '1px solid var(--border)',
     overflow: 'hidden',
   },
   header: {
@@ -83,20 +83,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px 24px',
-    borderBottom: '1px solid #333',
+    borderBottom: '1px solid var(--border)',
   },
   title: {
     fontSize: '16px',
     fontWeight: 600,
-    color: '#FAFAFA',
+    color: 'var(--text-primary)',
     margin: 0,
   },
   addButton: {
     padding: '8px 16px',
-    backgroundColor: '#006239',
+    backgroundColor: 'var(--primary)',
     color: '#FAFAFA',
     border: 'none',
-    borderRadius: '0px',
+    borderRadius: 'var(--border-radius)',
     fontSize: '14px',
     fontWeight: 500,
     cursor: 'pointer',
@@ -106,21 +106,21 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderCollapse: 'collapse',
   },
   tr: {
-    borderBottom: '1px solid #333',
+    borderBottom: '1px solid var(--border)',
   },
   th: {
     textAlign: 'left',
     padding: '16px 24px',
     fontSize: '12px',
     fontWeight: 600,
-    color: '#888',
+    color: 'var(--text-muted)',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
   },
   td: {
     padding: '16px 24px',
     fontSize: '14px',
-    color: '#FAFAFA',
+    color: 'var(--text-primary)',
   },
   guest: {
     display: 'flex',
@@ -131,7 +131,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: '32px',
     height: '32px',
     borderRadius: '50%',
-    backgroundColor: '#006239',
+    backgroundColor: 'var(--primary)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -155,7 +155,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   moreButton: {
     background: 'none',
     border: 'none',
-    color: '#888',
+    color: 'var(--text-muted)',
     cursor: 'pointer',
     padding: '4px',
   },

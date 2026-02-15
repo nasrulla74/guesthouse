@@ -11,7 +11,7 @@ function AppRoutes() {
   
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#121212', color: '#FAFAFA' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--background)', color: 'var(--text-primary)' }}>
         Loading...
       </div>
     )

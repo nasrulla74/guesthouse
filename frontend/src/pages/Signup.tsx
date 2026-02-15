@@ -77,11 +77,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: 'var(--spacing)',
   },
   card: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'var(--background-secondary)',
     padding: 'calc(var(--spacing) * 4)',
     borderRadius: 'var(--border-radius)',
     width: '100%',
     maxWidth: '400px',
+    border: '1px solid var(--border)',
   },
   title: {
     margin: '0 0 calc(var(--spacing) * 3)',
@@ -97,9 +98,9 @@ const styles: { [key: string]: React.CSSProperties } = {
   input: {
     padding: 'calc(var(--spacing) * 1.5)',
     borderRadius: 'var(--border-radius)',
-    border: '1px solid #333',
+    border: '1px solid var(--border)',
     fontSize: '14px',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'var(--background-tertiary)',
     color: 'var(--text-primary)',
     outline: 'none',
   },
@@ -130,7 +131,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   link: {
     marginTop: 'calc(var(--spacing) * 2)',
     textAlign: 'center',
-    color: '#888',
+    color: 'var(--text-muted)',
     fontSize: '14px',
   },
 }
