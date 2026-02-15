@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -24,6 +24,15 @@ export default function Login() {
       navigate('/dashboard')
     }
   }
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false)
+      }
+    }, 10000)
+    return () => clearTimeout(timeout)
+  }, [loading])
 
   return (
     <div style={styles.container}>

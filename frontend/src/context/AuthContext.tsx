@@ -16,8 +16,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error('Session error:', error)
+      }
       setUser(data.session?.user ?? null)
+      setLoading(false)
+    }).catch((err) => {
+      console.error('Failed to get session:', err)
       setLoading(false)
     })
 
@@ -35,12 +41,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        return { error }
+      }
+      setUser(data.user)
+      return { error: null }
+    } catch (err) {
+      return { error: err as Error }
+    }
   }
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    setUser(null)
   }
 
   return (
