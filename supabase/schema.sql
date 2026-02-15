@@ -115,3 +115,9 @@ CREATE POLICY "Allow anon read rooms" ON rooms FOR SELECT USING (true);
 CREATE POLICY "Allow anon insert rooms" ON rooms FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anon update rooms" ON rooms FOR UPDATE USING (true);
 CREATE POLICY "Allow anon delete rooms" ON rooms FOR DELETE USING (true);
+
+-- Storage bucket policies for images bucket
+CREATE POLICY "Allow public read access" ON storage.objects FOR SELECT USING (bucket_id = 'images');
+CREATE POLICY "Allow public insert access" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'images');
+CREATE POLICY "Allow public update access" ON storage.objects FOR UPDATE USING (bucket_id = 'images');
+CREATE POLICY "Allow public delete access" ON storage.objects FOR DELETE USING (bucket_id = 'images');
