@@ -25,11 +25,13 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const [guestHouseName, setGuestHouseName] = useState('GuestHouse')
+  const [logoUrl, setLogoUrl] = useState('')
 
   useEffect(() => {
     const fetchGuestHouse = async () => {
-      const { data } = await supabase.from('guest_houses').select('gh_name').limit(1).single()
+      const { data } = await supabase.from('guest_houses').select('gh_name, logo_url').limit(1).single()
       if (data?.gh_name) setGuestHouseName(data.gh_name)
+      if (data?.logo_url) setLogoUrl(data.logo_url)
     }
     fetchGuestHouse()
   }, [])
@@ -53,7 +55,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     }}>
       {isMobile && (
         <div style={styles.mobileHeader}>
-          <span style={styles.logoText}>{guestHouseName}</span>
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" style={styles.logoImage} />
+          ) : (
+            <span style={styles.logoText}>{guestHouseName}</span>
+          )}
           <button onClick={onMobileClose} style={styles.closeBtn}>
             <X size={20} />
           </button>
@@ -61,7 +67,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       )}
       {!isMobile && (
         <div style={styles.header}>
-          {!collapsed && <span style={styles.logoText}>{guestHouseName}</span>}
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" style={collapsed ? styles.logoCollapsed : styles.logoImage} />
+          ) : (
+            !collapsed && <span style={styles.logoText}>{guestHouseName}</span>
+          )}
           <button onClick={onToggle} style={styles.collapseBtn}>
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
@@ -160,6 +170,17 @@ const styles: { [key: string]: React.CSSProperties } = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     flex: 1,
+  },
+  logoImage: {
+    height: '36px',
+    width: 'auto',
+    objectFit: 'contain',
+  },
+  logoCollapsed: {
+    height: '32px',
+    width: '32px',
+    objectFit: 'contain',
+    borderRadius: '4px',
   },
   collapseBtn: {
     width: '32px',
