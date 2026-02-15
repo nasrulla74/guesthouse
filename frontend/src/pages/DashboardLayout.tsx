@@ -1,14 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { Home, ChevronRight, MoreHorizontal, Users, Star, Sun, Moon, Menu } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import { useTheme } from '../context/ThemeContext'
+import { supabase } from '../lib/supabase'
 
 export default function DashboardLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [guestHouseName, setGuestHouseName] = useState('')
   const { theme, toggleTheme } = useTheme()
   const location = useLocation()
+
+  useEffect(() => {
+    const fetchGuestHouse = async () => {
+      const { data } = await supabase.from('guest_houses').select('gh_name').limit(1).single()
+      if (data?.gh_name) setGuestHouseName(data.gh_name)
+    }
+    fetchGuestHouse()
+  }, [])
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
@@ -40,6 +50,10 @@ export default function DashboardLayout() {
         marginLeft: isMobile ? 0 : (sidebarCollapsed ? '80px' : '256px'),
         padding: isMobile ? '16px' : '32px',
       }}>
+        <div style={styles.topBarBg}>
+          <span style={styles.topBarText}>{guestHouseName}</span>
+        </div>
+        
         <div style={styles.topBar}>
           <div style={styles.leftControls}>
             <button 
@@ -109,6 +123,17 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '32px',
     transition: 'margin-left 0.2s ease, padding 0.2s ease',
     width: '100%',
+  },
+  topBarBg: {
+    backgroundColor: 'var(--primary)',
+    padding: '10px 16px',
+    marginBottom: '20px',
+    borderRadius: '8px',
+  },
+  topBarText: {
+    color: 'white',
+    fontSize: '16px',
+    fontWeight: 600,
   },
   topBar: {
     display: 'flex',
