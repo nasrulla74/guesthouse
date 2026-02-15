@@ -32,9 +32,20 @@ interface Room {
   size: string
 }
 
+interface Operator {
+  id: string
+  name: string
+  cu_type: string
+  email: string
+  phone: string
+  address: string
+  country: string
+  is_active: boolean
+}
+
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<'guestHouse' | 'general'>('guestHouse')
-  const [guestHouseTab, setGuestHouseTab] = useState<'info' | 'roomTypes' | 'rooms'>('info')
+  const [guestHouseTab, setGuestHouseTab] = useState<'info' | 'roomTypes' | 'rooms' | 'operators'>('info')
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -55,15 +66,19 @@ export default function Settings() {
   })
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
+  const [operators, setOperators] = useState<Operator[]>([])
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [roomTypeForm, setRoomTypeForm] = useState<Partial<RoomType>>({})
   const [roomForm, setRoomForm] = useState<Partial<Room>>({})
+  const [operatorForm, setOperatorForm] = useState<Partial<Operator>>({ is_active: true })
   const [showRoomTypeModal, setShowRoomTypeModal] = useState(false)
   const [showRoomModal, setShowRoomModal] = useState(false)
+  const [showOperatorModal, setShowOperatorModal] = useState(false)
   const [editingRoomType, setEditingRoomType] = useState<RoomType | null>(null)
   const [editingRoom, setEditingRoom] = useState<Room | null>(null)
+  const [editingOperator, setEditingOperator] = useState<Operator | null>(null)
   const { theme, toggleTheme } = useTheme()
   const [notifications, setNotifications] = useState(true)
 
@@ -74,10 +89,11 @@ export default function Settings() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [ghResult, rtResult, rResult] = await Promise.all([
+      const [ghResult, rtResult, rResult, opResult] = await Promise.all([
         supabase.from('guest_houses').select('*').limit(1).single(),
         supabase.from('room_types').select('*'),
-        supabase.from('rooms').select('*')
+        supabase.from('rooms').select('*'),
+        supabase.from('customers').select('*').order('name')
       ])
 
       if (ghResult.data) {
@@ -105,6 +121,7 @@ export default function Settings() {
       }
       if (rtResult.data) setRoomTypes(rtResult.data)
       if (rResult.data) setRooms(rResult.data)
+      if (opResult.data) setOperators(opResult.data)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -323,6 +340,89 @@ export default function Settings() {
     return roomTypes.find(rt => rt.id === id)?.name || 'Unknown'
   }
 
+  const handleAddOperator = async () => {
+    if (!operatorForm.name || !operatorForm.cu_type) return
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .insert({
+          name: operatorForm.name,
+          cu_type: operatorForm.cu_type,
+          email: operatorForm.email || null,
+          phone: operatorForm.phone || null,
+          address: operatorForm.address || null,
+          country: operatorForm.country || null,
+          is_active: operatorForm.is_active ?? true
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      if (data) setOperators([...operators, data])
+      setOperatorForm({ is_active: true })
+      setShowOperatorModal(false)
+    } catch (error) {
+      console.error('Error adding operator:', error)
+    }
+  }
+
+  const handleDeleteOperator = async (id: string) => {
+    try {
+      const { error } = await supabase.from('customers').delete().eq('id', id)
+      if (error) throw error
+      setOperators(operators.filter(op => op.id !== id))
+    } catch (error) {
+      console.error('Error deleting operator:', error)
+    }
+  }
+
+  const handleEditOperator = (operator: Operator) => {
+    setEditingOperator(operator)
+    setOperatorForm({
+      name: operator.name,
+      cu_type: operator.cu_type,
+      email: operator.email,
+      phone: operator.phone,
+      address: operator.address,
+      country: operator.country,
+      is_active: operator.is_active
+    })
+    setShowOperatorModal(true)
+  }
+
+  const handleUpdateOperator = async () => {
+    if (!editingOperator || !operatorForm.name || !operatorForm.cu_type) return
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .update({
+          name: operatorForm.name,
+          cu_type: operatorForm.cu_type,
+          email: operatorForm.email || null,
+          phone: operatorForm.phone || null,
+          address: operatorForm.address || null,
+          country: operatorForm.country || null,
+          is_active: operatorForm.is_active ?? true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingOperator.id)
+
+      if (error) throw error
+      setOperators(operators.map(op => op.id === editingOperator.id ? { ...op, ...operatorForm } as Operator : op))
+      setEditingOperator(null)
+      setOperatorForm({ is_active: true })
+      setShowOperatorModal(false)
+    } catch (error) {
+      console.error('Error updating operator:', error)
+    }
+  }
+
+  const closeOperatorModal = () => {
+    setShowOperatorModal(false)
+    setEditingOperator(null)
+    setOperatorForm({ is_active: true })
+  }
+
   if (loading) {
     return (
       <div style={{ ...styles.container, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -372,6 +472,12 @@ export default function Settings() {
               onClick={() => setGuestHouseTab('rooms')}
             >
               Rooms
+            </button>
+            <button
+              style={{ ...styles.subTab, ...(guestHouseTab === 'operators' ? styles.activeSubTab : {}) }}
+              onClick={() => setGuestHouseTab('operators')}
+            >
+              Operators
             </button>
           </div>
 
@@ -628,6 +734,56 @@ export default function Settings() {
               </table>
             </div>
           )}
+
+          {guestHouseTab === 'operators' && (
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <h3 style={styles.cardTitle}>Operators</h3>
+                <button onClick={() => { setEditingOperator(null); setOperatorForm({ is_active: true }); setShowOperatorModal(true); }} style={styles.addBtn}>
+                  <Plus size={16} /> Add Operator
+                </button>
+              </div>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Name</th>
+                    <th style={styles.th}>Type</th>
+                    <th style={styles.th}>Email</th>
+                    <th style={styles.th}>Phone</th>
+                    <th style={styles.th}>Country</th>
+                    <th style={styles.th}>Status</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {operators.map((op) => (
+                    <tr key={op.id} style={styles.tr}>
+                      <td style={styles.td}>{op.name}</td>
+                      <td style={styles.td}>{op.cu_type}</td>
+                      <td style={styles.td}>{op.email || '-'}</td>
+                      <td style={styles.td}>{op.phone || '-'}</td>
+                      <td style={styles.td}>{op.country || '-'}</td>
+                      <td style={styles.td}>
+                        <span style={{ color: op.is_active ? '#4CAF50' : '#FF6B6B', fontSize: '12px' }}>
+                          {op.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => handleEditOperator(op)} style={styles.editBtnTable}>
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={() => handleDeleteOperator(op.id)} style={styles.deleteBtn}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 
@@ -752,6 +908,95 @@ export default function Settings() {
               <button onClick={() => { setShowRoomModal(false); setEditingRoom(null); setRoomForm({}); }} style={styles.cancelBtn}>Cancel</button>
               <button onClick={editingRoom ? handleUpdateRoom : handleAddRoom} style={styles.saveBtn}>
                 {editingRoom ? 'Update' : 'Add'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showOperatorModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modal}>
+            <div style={styles.modalHeader}>
+              <h3>{editingOperator ? 'Edit Operator' : 'Add Operator'}</h3>
+              <button onClick={closeOperatorModal} style={styles.closeBtn}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={styles.modalBody}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Name *</label>
+                <input
+                  type="text"
+                  value={operatorForm.name || ''}
+                  onChange={(e) => setOperatorForm({ ...operatorForm, name: e.target.value })}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Type *</label>
+                <select
+                  value={operatorForm.cu_type || ''}
+                  onChange={(e) => setOperatorForm({ ...operatorForm, cu_type: e.target.value })}
+                  style={styles.input}
+                >
+                  <option value="">Select Type</option>
+                  <option value="OTA">OTA</option>
+                  <option value="Tour Operator">Tour Operator</option>
+                  <option value="FIT">FIT</option>
+                </select>
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Email</label>
+                <input
+                  type="email"
+                  value={operatorForm.email || ''}
+                  onChange={(e) => setOperatorForm({ ...operatorForm, email: e.target.value })}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Phone</label>
+                <input
+                  type="text"
+                  value={operatorForm.phone || ''}
+                  onChange={(e) => setOperatorForm({ ...operatorForm, phone: e.target.value })}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Address</label>
+                <textarea
+                  value={operatorForm.address || ''}
+                  onChange={(e) => setOperatorForm({ ...operatorForm, address: e.target.value })}
+                  style={{ ...styles.input, minHeight: '60px' }}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Country</label>
+                <input
+                  type="text"
+                  value={operatorForm.country || ''}
+                  onChange={(e) => setOperatorForm({ ...operatorForm, country: e.target.value })}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={operatorForm.is_active ?? true}
+                    onChange={(e) => setOperatorForm({ ...operatorForm, is_active: e.target.checked })}
+                    style={styles.checkbox}
+                  />
+                  Active
+                </label>
+              </div>
+            </div>
+            <div style={styles.modalFooter}>
+              <button onClick={closeOperatorModal} style={styles.cancelBtn}>Cancel</button>
+              <button onClick={editingOperator ? handleUpdateOperator : handleAddOperator} style={styles.saveBtn}>
+                {editingOperator ? 'Update' : 'Add'}
               </button>
             </div>
           </div>
