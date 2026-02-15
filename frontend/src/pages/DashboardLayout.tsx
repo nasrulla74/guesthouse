@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
-import { Home, ChevronRight, Star, MoreHorizontal, Users, Sun, Moon, Menu } from 'lucide-react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Home, ChevronRight, MoreHorizontal, Users, Star, Sun, Moon, Menu } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import { useTheme } from '../context/ThemeContext'
 
@@ -15,12 +15,17 @@ export default function DashboardLayout() {
   const getBreadcrumb = () => {
     const path = location.pathname
     if (path.includes('settings')) {
-      return { current: 'Settings' }
+      return [
+        { label: 'Dashboard', path: '/dashboard' },
+        { label: 'Settings', path: '/dashboard/settings', active: true }
+      ]
     }
-    return { current: 'Guests Reviews' }
+    return [
+      { label: 'Dashboard', path: '/dashboard', active: true }
+    ]
   }
 
-  const breadcrumb = getBreadcrumb()
+  const breadcrumbs = getBreadcrumb()
 
   return (
     <div style={styles.container}>
@@ -44,11 +49,19 @@ export default function DashboardLayout() {
               <Menu size={24} />
             </button>
             <nav style={styles.breadcrumb}>
-              <Home size={14} style={styles.breadcrumbIcon} />
-              <ChevronRight size={14} style={styles.chevron} />
-              <span style={styles.breadcrumbText}>Manage Guests</span>
-              <ChevronRight size={14} style={styles.chevron} />
-              <span style={styles.breadcrumbActive}>{breadcrumb.current}</span>
+              <Link to="/dashboard" style={styles.breadcrumbLink}>
+                <Home size={14} />
+              </Link>
+              {breadcrumbs.map((crumb, index) => (
+                <span key={index} style={styles.breadcrumbItem}>
+                  <ChevronRight size={14} style={styles.chevron} />
+                  {crumb.active ? (
+                    <span style={styles.breadcrumbActive}>{crumb.label}</span>
+                  ) : (
+                    <Link to={crumb.path} style={styles.breadcrumbLink}>{crumb.label}</Link>
+                  )}
+                </span>
+              ))}
             </nav>
           </div>
           <div style={styles.actions}>
@@ -61,7 +74,7 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        {breadcrumb.current !== 'Settings' && (
+        {!location.pathname.includes('settings') && (
           <div style={styles.header}>
             <div style={styles.iconBox}>
               <Users size={isMobile ? 24 : 32} style={{ color: 'var(--text-primary)' }} />
@@ -69,7 +82,7 @@ export default function DashboardLayout() {
             <div>
               <div style={styles.titleRow}>
                 <h1 style={{...styles.title, fontSize: isMobile ? '18px' : '24px'}}>Overview & Reviews</h1>
-                <Star size={20} style={{ color: 'var(--text-muted)', cursor: 'pointer' }} />
+                <Star size={20} style={{ color: 'var(--text-muted', cursor: 'pointer' }} />
               </div>
               <p style={styles.subtitle}>Auto-updates in 2 min</p>
             </div>
@@ -131,20 +144,23 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: 'var(--text-muted)',
     flexWrap: 'wrap',
   },
-  breadcrumbIcon: {
-    cursor: 'pointer',
+  breadcrumbLink: {
+    display: 'flex',
+    alignItems: 'center',
     color: 'var(--text-muted)',
+    textDecoration: 'none',
+    cursor: 'pointer',
   },
-  breadcrumbText: {
-    cursor: 'pointer',
-    color: 'var(--text-muted)',
+  breadcrumbItem: {
+    display: 'flex',
+    alignItems: 'center',
   },
   breadcrumbActive: {
     color: 'var(--primary)',
-    fontWeight: 700,
+    fontWeight: 600,
   },
   chevron: {
-    color: 'var(--border)',
+    color: 'var(--text-muted)',
   },
   actions: {
     display: 'flex',
