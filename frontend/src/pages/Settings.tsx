@@ -982,8 +982,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginBottom: '12px',
   },
   logoPreview: {
-    width: '60px',
-    height: '60px',
+    width: '180px',
+    height: '55px',
     borderRadius: '6px',
     overflow: 'hidden',
     backgroundColor: 'var(--background-tertiary)',
@@ -993,9 +993,9 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid var(--border)',
   },
   logoImage: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
+    maxWidth: '100%',
+    maxHeight: '100%',
+    objectFit: 'contain',
   },
   logoPlaceholder: {
     display: 'flex',
