@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Loader2, Calendar, User, Phone, Mail, Edit2, Trash2, X } from 'lucide-react'
+import { Plus, Search, Loader2, Edit2, Trash2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Booking {
