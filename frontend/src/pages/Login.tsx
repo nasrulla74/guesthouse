@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -8,7 +8,6 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { signIn } = useAuth()
-  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,15 +19,13 @@ export default function Login() {
     if (error) {
       setError(error.message)
       setLoading(false)
-    } else {
-      navigate('/dashboard')
     }
   }
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2 style={styles.title}>Login</h2>
+        <h1 style={styles.title}>Login</h1>
         {error && <div style={styles.error}>{error}</div>}
         <form onSubmit={handleSubmit} style={styles.form}>
           <input
@@ -65,51 +62,57 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--background)',
+    padding: 'var(--spacing)',
   },
   card: {
-    backgroundColor: 'white',
-    padding: '2rem',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    backgroundColor: '#1E1E1E',
+    padding: 'calc(var(--spacing) * 4)',
+    borderRadius: 'var(--border-radius)',
     width: '100%',
     maxWidth: '400px',
   },
   title: {
-    margin: '0 0 1.5rem',
+    margin: '0 0 calc(var(--spacing) * 3)',
     textAlign: 'center',
-    color: '#333',
+    color: 'var(--text-primary)',
+    fontSize: '24px',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    gap: 'var(--spacing)',
   },
   input: {
-    padding: '0.75rem',
-    borderRadius: '4px',
-    border: '1px solid #ddd',
-    fontSize: '1rem',
+    padding: 'calc(var(--spacing) * 1.5)',
+    borderRadius: 'var(--border-radius)',
+    border: '1px solid #333',
+    fontSize: '14px',
+    backgroundColor: '#2A2A2A',
+    color: 'var(--text-primary)',
+    outline: 'none',
   },
   button: {
-    padding: '0.75rem',
-    borderRadius: '4px',
+    padding: 'calc(var(--spacing) * 1.5)',
+    borderRadius: 'var(--border-radius)',
     border: 'none',
-    backgroundColor: '#4a90d9',
+    backgroundColor: 'var(--primary)',
     color: 'white',
-    fontSize: '1rem',
-    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 600,
+    marginTop: 'var(--spacing)',
   },
   error: {
-    color: '#dc3545',
-    marginBottom: '1rem',
-    padding: '0.5rem',
-    backgroundColor: '#f8d7da',
-    borderRadius: '4px',
+    color: '#FF6B6B',
+    marginBottom: 'var(--spacing)',
+    padding: 'var(--spacing)',
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    borderRadius: 'var(--border-radius)',
   },
   link: {
-    marginTop: '1rem',
+    marginTop: 'calc(var(--spacing) * 2)',
     textAlign: 'center',
-    color: '#666',
+    color: '#888',
+    fontSize: '14px',
   },
 }
