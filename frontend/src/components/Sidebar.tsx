@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react'
 import { Home, Users, Calendar, CreditCard, Settings, LogOut, Star, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
@@ -22,6 +24,15 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const [guestHouseName, setGuestHouseName] = useState('GuestHouse')
+
+  useEffect(() => {
+    const fetchGuestHouse = async () => {
+      const { data } = await supabase.from('guest_houses').select('gh_name').limit(1).single()
+      if (data?.gh_name) setGuestHouseName(data.gh_name)
+    }
+    fetchGuestHouse()
+  }, [])
 
   const handleSignOut = async () => {
     await signOut()
@@ -42,7 +53,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     }}>
       {isMobile && (
         <div style={styles.mobileHeader}>
-          <span style={styles.logoText}>GuestHouse</span>
+          <span style={styles.logoText}>{guestHouseName}</span>
           <button onClick={onMobileClose} style={styles.closeBtn}>
             <X size={20} />
           </button>
@@ -50,7 +61,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       )}
       {!isMobile && (
         <div style={styles.header}>
-          {!collapsed && <span style={styles.logoText}>GuestHouse</span>}
+          {!collapsed && <span style={styles.logoText}>{guestHouseName}</span>}
           <button onClick={onToggle} style={styles.collapseBtn}>
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
@@ -139,11 +150,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     justifyContent: 'space-between',
     minHeight: '60px',
+    gap: '8px',
   },
   logoText: {
-    fontSize: '20px',
+    fontSize: '18px',
     fontWeight: 700,
     color: 'var(--primary)',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    flex: 1,
   },
   collapseBtn: {
     width: '32px',
