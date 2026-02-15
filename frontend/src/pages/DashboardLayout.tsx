@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { Home, ChevronRight, MoreHorizontal, Users, Star, Sun, Moon, Menu } from 'lucide-react'
+import { Home, ChevronRight, Users, Sun, Moon, Menu } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import { useTheme } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
@@ -51,6 +51,11 @@ export default function DashboardLayout() {
       }}>
         <div style={styles.topBarBg}>
           <span style={styles.topBarText}>{guestHouseName}</span>
+          <div style={styles.topBarActions}>
+            <button onClick={toggleTheme} style={styles.topBarBtn}>
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
         </div>
         
         <div style={styles.topBar}>
@@ -77,25 +82,16 @@ export default function DashboardLayout() {
               ))}
             </nav>
           </div>
-          <div style={styles.actions}>
-            <button onClick={toggleTheme} style={styles.themeToggle}>
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button style={styles.moreButton}>
-              <MoreHorizontal size={18} />
-            </button>
-          </div>
         </div>
 
         {!location.pathname.includes('settings') && (
           <div style={styles.header}>
             <div style={styles.iconBox}>
-              <Users size={isMobile ? 24 : 32} style={{ color: 'var(--text-primary)' }} />
+              <Users size={24} style={{ color: 'var(--text-primary)' }} />
             </div>
             <div>
               <div style={styles.titleRow}>
-                <h1 style={{...styles.title, fontSize: isMobile ? '18px' : '24px'}}>Overview & Reviews</h1>
-                <Star size={20} style={{ color: 'var(--text-muted', cursor: 'pointer' }} />
+                <h1 style={styles.title}>Overview & Reviews</h1>
               </div>
               <p style={styles.subtitle}>Auto-updates in 2 min</p>
             </div>
@@ -128,11 +124,31 @@ const styles: { [key: string]: React.CSSProperties } = {
   topBarBg: {
     backgroundColor: 'var(--primary)',
     padding: '8px 16px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   topBarText: {
     color: 'white',
     fontSize: '13px',
     fontWeight: 600,
+  },
+  topBarActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  topBarBtn: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '4px',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    border: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    cursor: 'pointer',
   },
   topBar: {
     display: 'flex',
@@ -169,8 +185,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 500,
     color: 'var(--text-muted)',
     flexWrap: 'wrap',
-    padding: 0,
-    marginTop: 0,
   },
   breadcrumbLink: {
     display: 'flex',
