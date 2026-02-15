@@ -8,8 +8,13 @@ const stats = [
 ]
 
 export default function StatsCards() {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  
   return (
-    <div style={styles.grid}>
+    <div style={{ 
+      ...styles.grid,
+      gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+    }}>
       {stats.map((stat, index) => {
         const Icon = stat.icon
         return (
@@ -38,7 +43,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   card: {
     backgroundColor: 'var(--background-secondary)',
-    padding: '24px',
+    padding: '20px',
     borderRadius: 'var(--border-radius)',
     border: '1px solid var(--border)',
   },
@@ -46,7 +51,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '16px',
+    marginBottom: '12px',
   },
   iconWrapper: {
     width: '40px',

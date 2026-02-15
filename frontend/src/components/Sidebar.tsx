@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, CreditCard, Settings, LogOut, Star, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Home, Users, Calendar, CreditCard, Settings, LogOut, Star, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -14,9 +14,11 @@ const menuItems = [
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
+  mobileOpen?: boolean
+  onMobileClose?: () => void
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
@@ -29,14 +31,31 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const userName = user?.email?.split('@')[0] || 'User'
   const userInitial = userName.charAt(0).toUpperCase()
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
   return (
-    <aside style={{ ...styles.sidebar, width: collapsed ? '80px' : '256px' }}>
-      <div style={styles.header}>
-        {!collapsed && <span style={styles.logoText}>GuestHouse</span>}
-        <button onClick={onToggle} style={styles.collapseBtn}>
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
-      </div>
+    <aside style={{ 
+      ...styles.sidebar, 
+      width: isMobile ? '280px' : (collapsed ? '80px' : '256px'),
+      transform: isMobile && !mobileOpen ? 'translateX(-100%)' : 'translateX(0)',
+      left: isMobile ? 0 : undefined,
+    }}>
+      {isMobile && (
+        <div style={styles.mobileHeader}>
+          <span style={styles.logoText}>GuestHouse</span>
+          <button onClick={onMobileClose} style={styles.closeBtn}>
+            <X size={20} />
+          </button>
+        </div>
+      )}
+      {!isMobile && (
+        <div style={styles.header}>
+          {!collapsed && <span style={styles.logoText}>GuestHouse</span>}
+          <button onClick={onToggle} style={styles.collapseBtn}>
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        </div>
+      )}
       
       <nav style={styles.nav}>
         {menuItems.map((item) => {
@@ -46,33 +65,34 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <Link
               key={item.path}
               to={item.path}
+              onClick={isMobile ? onMobileClose : undefined}
               style={{
                 ...styles.navItem,
                 ...(isActive ? styles.navItemActive : {}),
-                justifyContent: collapsed ? 'center' : 'flex-start',
+                justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
               }}
-              title={collapsed ? item.label : undefined}
+              title={collapsed && !isMobile ? item.label : undefined}
             >
               <Icon size={18} />
-              {!collapsed && <span>{item.label}</span>}
+              {(!collapsed || isMobile) && <span>{item.label}</span>}
             </Link>
           )
         })}
       </nav>
 
       <div style={styles.bottom}>
-        <div style={{ ...styles.userInfo, justifyContent: collapsed ? 'center' : 'flex-start' }}>
+        <div style={{ ...styles.userInfo, justifyContent: collapsed && !isMobile ? 'center' : 'flex-start' }}>
           <div style={styles.avatar}>{userInitial}</div>
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <div style={styles.userDetails}>
               <span style={styles.userName}>{userName}</span>
               <span style={styles.userEmail}>{user?.email}</span>
             </div>
           )}
         </div>
-        <button onClick={handleSignOut} style={{ ...styles.navItem, justifyContent: collapsed ? 'center' : 'flex-start' }} title={collapsed ? 'Sign Out' : undefined}>
+        <button onClick={handleSignOut} style={{ ...styles.navItem, justifyContent: collapsed && !isMobile ? 'center' : 'flex-start' }} title={collapsed && !isMobile ? 'Sign Out' : undefined}>
           <LogOut size={18} />
-          {!collapsed && <span>Sign Out</span>}
+          {(!collapsed || isMobile) && <span>Sign Out</span>}
         </button>
       </div>
     </aside>
@@ -89,8 +109,28 @@ const styles: { [key: string]: React.CSSProperties } = {
     position: 'fixed',
     left: 0,
     top: 0,
-    transition: 'width 0.2s ease',
+    transition: 'transform 0.3s ease, width 0.2s ease',
     zIndex: 100,
+  },
+  mobileHeader: {
+    padding: '16px',
+    borderBottom: '1px solid var(--border)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: '60px',
+  },
+  closeBtn: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    border: '1px solid var(--border)',
+    backgroundColor: 'transparent',
+    color: 'var(--text-secondary)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   header: {
     padding: '16px',

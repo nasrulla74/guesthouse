@@ -18,6 +18,9 @@
   --font-family: 'Circular', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --spacing: 8px;
   --border-radius: 0px;
+  --sidebar-width: 256px;
+  --sidebar-collapsed: 80px;
+  --topbar-height: 60px;
 }
 
 [data-theme="light"] {
@@ -41,6 +44,18 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   transition: background-color 0.3s, color 0.3s;
+}
+
+@media (min-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 16px;
+  }
 }
 
 #root {

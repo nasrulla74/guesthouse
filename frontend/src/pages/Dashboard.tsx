@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, ChevronRight, Star, MoreHorizontal, Users, Sun, Moon } from 'lucide-react'
+import { Home, ChevronRight, Star, MoreHorizontal, Users, Sun, Moon, Menu, X } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import StatsCards from '../components/StatsCards'
 import ReviewTable from '../components/ReviewTable'
@@ -7,23 +7,40 @@ import { useTheme } from '../context/ThemeContext'
 
 export default function Dashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { theme, toggleTheme } = useTheme()
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
   return (
     <div style={styles.container}>
       <Sidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        collapsed={isMobile ? true : sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)}
       />
-      <main style={{ ...styles.main, marginLeft: sidebarCollapsed ? '80px' : '256px' }}>
+      <main style={{ 
+        ...styles.main, 
+        marginLeft: isMobile ? 0 : (sidebarCollapsed ? '80px' : '256px'),
+        padding: isMobile ? '16px' : '32px',
+      }}>
         <div style={styles.topBar}>
-          <nav style={styles.breadcrumb}>
-            <Home size={14} style={styles.breadcrumbIcon} />
-            <ChevronRight size={14} style={styles.chevron} />
-            <span style={styles.breadcrumbText}>Manage Guests</span>
-            <ChevronRight size={14} style={styles.chevron} />
-            <span style={styles.breadcrumbActive}>Guests Reviews</span>
-          </nav>
+          <div style={styles.leftControls}>
+            <button 
+              onClick={() => setMobileMenuOpen(true)} 
+              style={{...styles.menuButton, display: isMobile ? 'flex' : 'none'}}
+            >
+              <Menu size={24} />
+            </button>
+            <nav style={styles.breadcrumb}>
+              <Home size={14} style={styles.breadcrumbIcon} />
+              <ChevronRight size={14} style={styles.chevron} />
+              <span style={styles.breadcrumbText}>Manage Guests</span>
+              <ChevronRight size={14} style={styles.chevron} />
+              <span style={styles.breadcrumbActive}>Guests Reviews</span>
+            </nav>
+          </div>
           <div style={styles.actions}>
             <button onClick={toggleTheme} style={styles.themeToggle}>
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -36,11 +53,11 @@ export default function Dashboard() {
 
         <div style={styles.header}>
           <div style={styles.iconBox}>
-            <Users size={32} style={{ color: 'var(--text-primary)' }} />
+            <Users size={isMobile ? 24 : 32} style={{ color: 'var(--text-primary)' }} />
           </div>
           <div>
             <div style={styles.titleRow}>
-              <h1 style={styles.title}>Overview & Reviews</h1>
+              <h1 style={{...styles.title, fontSize: isMobile ? '18px' : '24px'}}>Overview & Reviews</h1>
               <Star size={20} style={{ color: 'var(--text-muted)', cursor: 'pointer' }} />
             </div>
             <p style={styles.subtitle}>Auto-updates in 2 min</p>
@@ -50,6 +67,9 @@ export default function Dashboard() {
         <StatsCards />
         <ReviewTable />
       </main>
+      {mobileMenuOpen && isMobile && (
+        <div style={styles.overlay} onClick={() => setMobileMenuOpen(false)} />
+      )}
     </div>
   )
 }
@@ -63,13 +83,33 @@ const styles: { [key: string]: React.CSSProperties } = {
   main: {
     flex: 1,
     padding: '32px',
-    transition: 'margin-left 0.2s ease',
+    transition: 'margin-left 0.2s ease, padding 0.2s ease',
+    width: '100%',
   },
   topBar: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '32px',
+    marginBottom: '24px',
+    flexWrap: 'wrap',
+    gap: '12px',
+  },
+  leftControls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  menuButton: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '8px',
+    backgroundColor: 'var(--background-secondary)',
+    border: '1px solid var(--border)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'var(--text-secondary)',
+    cursor: 'pointer',
   },
   breadcrumb: {
     display: 'flex',
@@ -78,6 +118,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '12px',
     fontWeight: 500,
     color: 'var(--text-muted)',
+    flexWrap: 'wrap',
   },
   breadcrumbIcon: {
     cursor: 'pointer',
@@ -127,7 +168,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
-    marginBottom: '40px',
+    marginBottom: '24px',
+    flexWrap: 'wrap',
   },
   iconBox: {
     width: '64px',
@@ -156,5 +198,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 500,
     marginTop: '4px',
     fontStyle: 'italic',
+  },
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 99,
   },
 }
