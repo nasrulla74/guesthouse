@@ -1,40 +1,50 @@
+import { Home, ChevronRight, Star, MoreHorizontal, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import Sidebar from '../components/Sidebar'
+import StatsCards from '../components/StatsCards'
+import ReviewTable from '../components/ReviewTable'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
 
 export default function Dashboard() {
   const { user, signOut } = useAuth()
-  const navigate = useNavigate()
-
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/login')
-  }
 
   return (
     <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>Dashboard</h1>
-        <button onClick={handleSignOut} style={styles.button}>
-          Sign Out
-        </button>
-      </header>
+      <Sidebar />
       <main style={styles.main}>
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Welcome!</h2>
-          <p style={styles.text}>Email: {user?.email}</p>
-          <p style={styles.text}>User ID: {user?.id}</p>
-          <p style={styles.text}>Signed up: {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
+        {/* Top Breadcrumbs and Actions */}
+        <div style={styles.topBar}>
+          <nav style={styles.breadcrumb}>
+            <Home size={14} style={styles.breadcrumbIcon} />
+            <ChevronRight size={14} style={styles.chevron} />
+            <span style={styles.breadcrumbText}>Manage Guests</span>
+            <ChevronRight size={14} style={styles.chevron} />
+            <span style={styles.breadcrumbActive}>Guests Reviews</span>
+          </nav>
+          <button style={styles.moreButton}>
+            <MoreHorizontal size={18} />
+          </button>
         </div>
-        <div style={styles.grid}>
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Sample Data</h3>
-            <p style={styles.text}>No data yet</p>
+
+        {/* Page Header */}
+        <div style={styles.header}>
+          <div style={styles.iconBox}>
+            <Users size={32} style={{ color: '#FAFAFA' }} />
           </div>
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Recent Activity</h3>
-            <p style={styles.text}>No activity yet</p>
+          <div>
+            <div style={styles.titleRow}>
+              <h1 style={styles.title}>Overview & Reviews</h1>
+              <Star size={20} style={{ color: '#444', cursor: 'pointer' }} />
+            </div>
+            <p style={styles.subtitle}>Auto-updates in 2 min</p>
           </div>
         </div>
+
+        {/* Stats Cards Row */}
+        <StatsCards />
+
+        {/* Data Table Section */}
+        <ReviewTable />
       </main>
     </div>
   )
@@ -43,56 +53,87 @@ export default function Dashboard() {
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
     minHeight: '100vh',
-    backgroundColor: 'var(--background)',
+    backgroundColor: '#121212',
+    display: 'flex',
   },
-  header: {
-    backgroundColor: '#1E1E1E',
-    padding: 'calc(var(--spacing) * 2) calc(var(--spacing) * 4)',
+  main: {
+    flex: 1,
+    marginLeft: '256px',
+    padding: '32px',
+  },
+  topBar: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: '1px solid #333',
+    marginBottom: '32px',
+  },
+  breadcrumb: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '12px',
+    fontWeight: 500,
+    color: '#666',
+  },
+  breadcrumbIcon: {
+    cursor: 'pointer',
+    color: '#666',
+  },
+  breadcrumbText: {
+    cursor: 'pointer',
+    color: '#666',
+  },
+  breadcrumbActive: {
+    color: '#006239',
+    fontWeight: 700,
+  },
+  chevron: {
+    color: '#444',
+  },
+  moreButton: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    backgroundColor: '#1E1E1E',
+    border: '1px solid #333',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#666',
+    cursor: 'pointer',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    marginBottom: '40px',
+  },
+  iconBox: {
+    width: '64px',
+    height: '64px',
+    backgroundColor: '#333',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+  },
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
   },
   title: {
-    margin: 0,
-    color: 'var(--text-primary)',
     fontSize: '24px',
+    fontWeight: 700,
+    color: '#FAFAFA',
+    margin: 0,
   },
-  button: {
-    padding: 'calc(var(--spacing) * 1) calc(var(--spacing) * 2)',
-    borderRadius: 'var(--border-radius)',
-    border: 'none',
-    backgroundColor: 'var(--primary)',
-    color: 'white',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 600,
-  },
-  main: {
-    padding: 'calc(var(--spacing) * 4)',
-    maxWidth: '1200px',
-    margin: '0 auto',
-  },
-  card: {
-    backgroundColor: '#1E1E1E',
-    padding: 'calc(var(--spacing) * 3)',
-    borderRadius: 'var(--border-radius)',
-  },
-  cardTitle: {
-    margin: '0 0 var(--spacing)',
-    color: 'var(--text-primary)',
-    fontSize: '16px',
-    fontWeight: 600,
-  },
-  text: {
-    color: '#888',
-    margin: 'calc(var(--spacing) * 0.5) 0',
-    fontSize: '14px',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: 'calc(var(--spacing) * 2)',
-    marginTop: 'calc(var(--spacing) * 2)',
+  subtitle: {
+    fontSize: '12px',
+    color: '#666',
+    fontWeight: 500,
+    marginTop: '4px',
+    fontStyle: 'italic',
   },
 }
