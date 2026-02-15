@@ -48,7 +48,6 @@ export default function DashboardLayout() {
       <main style={{ 
         ...styles.main, 
         marginLeft: isMobile ? 0 : (sidebarCollapsed ? '80px' : '256px'),
-        padding: isMobile ? '16px' : '32px',
       }}>
         <div style={styles.topBarBg}>
           <span style={styles.topBarText}>{guestHouseName}</span>
@@ -103,7 +102,9 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <Outlet />
+        <div style={{ padding: '0 24px' }}>
+          <Outlet />
+        </div>
       </main>
       {mobileMenuOpen && isMobile && (
         <div style={styles.overlay} onClick={() => setMobileMenuOpen(false)} />
@@ -120,13 +121,13 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   main: {
     flex: 1,
-    padding: '32px',
-    transition: 'margin-left 0.2s ease, padding 0.2s ease',
+    padding: 0,
+    transition: 'margin-left 0.2s ease',
     width: '100%',
   },
   topBarBg: {
     backgroundColor: 'var(--primary)',
-    padding: '10px 16px',
+    padding: '12px 24px',
   },
   topBarText: {
     color: 'white',
@@ -137,8 +138,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: '16px 24px',
     marginTop: '16px',
-    marginBottom: '24px',
     flexWrap: 'wrap',
     gap: '12px',
   },
