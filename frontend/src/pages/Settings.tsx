@@ -45,6 +45,8 @@ export default function Settings() {
   const [roomForm, setRoomForm] = useState<Partial<Room>>({})
   const [showRoomTypeModal, setShowRoomTypeModal] = useState(false)
   const [showRoomModal, setShowRoomModal] = useState(false)
+  const [editingRoomType, setEditingRoomType] = useState<RoomType | null>(null)
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -131,6 +133,34 @@ export default function Settings() {
     }
   }
 
+  const handleEditRoomType = (rt: RoomType) => {
+    setEditingRoomType(rt)
+    setRoomTypeForm({ name: rt.name, size: rt.size })
+    setShowRoomTypeModal(true)
+  }
+
+  const handleUpdateRoomType = async () => {
+    if (!editingRoomType || !roomTypeForm.name || !roomTypeForm.size) return
+    try {
+      const { error } = await supabase
+        .from('room_types')
+        .update({
+          name: roomTypeForm.name,
+          size: roomTypeForm.size,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingRoomType.id)
+
+      if (error) throw error
+      setRoomTypes(roomTypes.map(rt => rt.id === editingRoomType.id ? { ...rt, ...roomTypeForm } : rt))
+      setEditingRoomType(null)
+      setRoomTypeForm({})
+      setShowRoomTypeModal(false)
+    } catch (error) {
+      console.error('Error updating room type:', error)
+    }
+  }
+
   const handleAddRoom = async () => {
     if (!roomForm.room_no || !roomForm.room_type_id || !roomForm.size) return
     try {
@@ -160,6 +190,35 @@ export default function Settings() {
       setRooms(rooms.filter(r => r.id !== id))
     } catch (error) {
       console.error('Error deleting room:', error)
+    }
+  }
+
+  const handleEditRoom = (room: Room) => {
+    setEditingRoom(room)
+    setRoomForm({ room_no: room.room_no, room_type_id: room.room_type_id, size: room.size })
+    setShowRoomModal(true)
+  }
+
+  const handleUpdateRoom = async () => {
+    if (!editingRoom || !roomForm.room_no || !roomForm.room_type_id || !roomForm.size) return
+    try {
+      const { error } = await supabase
+        .from('rooms')
+        .update({
+          room_no: roomForm.room_no,
+          room_type_id: roomForm.room_type_id,
+          size: roomForm.size,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingRoom.id)
+
+      if (error) throw error
+      setRooms(rooms.map(r => r.id === editingRoom.id ? { ...r, ...roomForm } : r))
+      setEditingRoom(null)
+      setRoomForm({})
+      setShowRoomModal(false)
+    } catch (error) {
+      console.error('Error updating room:', error)
     }
   }
 
@@ -384,9 +443,14 @@ export default function Settings() {
                       <td style={styles.td}>{rt.name}</td>
                       <td style={styles.td}>{rt.size}</td>
                       <td style={styles.td}>
-                        <button onClick={() => handleDeleteRoomType(rt.id)} style={styles.deleteBtn}>
-                          <Trash2 size={16} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => handleEditRoomType(rt)} style={styles.editBtnTable}>
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={() => handleDeleteRoomType(rt.id)} style={styles.deleteBtn}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -419,9 +483,14 @@ export default function Settings() {
                       <td style={styles.td}>{getRoomTypeName(room.room_type_id)}</td>
                       <td style={styles.td}>{room.size}</td>
                       <td style={styles.td}>
-                        <button onClick={() => handleDeleteRoom(room.id)} style={styles.deleteBtn}>
-                          <Trash2 size={16} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => handleEditRoom(room)} style={styles.editBtnTable}>
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={() => handleDeleteRoom(room.id)} style={styles.deleteBtn}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -436,8 +505,8 @@ export default function Settings() {
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
             <div style={styles.modalHeader}>
-              <h3>Add Room Type</h3>
-              <button onClick={() => setShowRoomTypeModal(false)} style={styles.closeBtn}>
+              <h3>{editingRoomType ? 'Edit Room Type' : 'Add Room Type'}</h3>
+              <button onClick={() => { setShowRoomTypeModal(false); setEditingRoomType(null); setRoomTypeForm({}); }} style={styles.closeBtn}>
                 <X size={20} />
               </button>
             </div>
@@ -463,8 +532,10 @@ export default function Settings() {
               </div>
             </div>
             <div style={styles.modalFooter}>
-              <button onClick={() => setShowRoomTypeModal(false)} style={styles.cancelBtn}>Cancel</button>
-              <button onClick={handleAddRoomType} style={styles.saveBtn}>Add</button>
+              <button onClick={() => { setShowRoomTypeModal(false); setEditingRoomType(null); setRoomTypeForm({}); }} style={styles.cancelBtn}>Cancel</button>
+              <button onClick={editingRoomType ? handleUpdateRoomType : handleAddRoomType} style={styles.saveBtn}>
+                {editingRoomType ? 'Update' : 'Add'}
+              </button>
             </div>
           </div>
         </div>
@@ -474,8 +545,8 @@ export default function Settings() {
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
             <div style={styles.modalHeader}>
-              <h3>Add Room</h3>
-              <button onClick={() => setShowRoomModal(false)} style={styles.closeBtn}>
+              <h3>{editingRoom ? 'Edit Room' : 'Add Room'}</h3>
+              <button onClick={() => { setShowRoomModal(false); setEditingRoom(null); setRoomForm({}); }} style={styles.closeBtn}>
                 <X size={20} />
               </button>
             </div>
@@ -514,8 +585,10 @@ export default function Settings() {
               </div>
             </div>
             <div style={styles.modalFooter}>
-              <button onClick={() => setShowRoomModal(false)} style={styles.cancelBtn}>Cancel</button>
-              <button onClick={handleAddRoom} style={styles.saveBtn}>Add</button>
+              <button onClick={() => { setShowRoomModal(false); setEditingRoom(null); setRoomForm({}); }} style={styles.cancelBtn}>Cancel</button>
+              <button onClick={editingRoom ? handleUpdateRoom : handleAddRoom} style={styles.saveBtn}>
+                {editingRoom ? 'Update' : 'Add'}
+              </button>
             </div>
           </div>
         </div>
@@ -651,6 +724,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#FF6B6B',
     cursor: 'pointer',
     borderRadius: '4px',
+  },
+  editBtnTable: {
+    padding: '6px',
+    backgroundColor: 'transparent',
+    border: 'none',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    borderRadius: '4px',
+    display: 'flex',
+    alignItems: 'center',
   },
   form: {
     padding: '20px',

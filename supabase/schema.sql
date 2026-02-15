@@ -94,7 +94,23 @@ CREATE INDEX IF NOT EXISTS idx_room_types_gh_id ON room_types(gh_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_room_type_id ON rooms(room_type_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_room_no ON rooms(room_no);
 
--- Enable Row Level Security (optional - can be enabled later)
--- ALTER TABLE guest_houses ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE room_types ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+-- Enable Row Level Security
+ALTER TABLE guest_houses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE room_types ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for anon access (adjust as needed for your security requirements)
+CREATE POLICY "Allow anon read guest_houses" ON guest_houses FOR SELECT USING (true);
+CREATE POLICY "Allow anon insert guest_houses" ON guest_houses FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon update guest_houses" ON guest_houses FOR UPDATE USING (true);
+CREATE POLICY "Allow anon delete guest_houses" ON guest_houses FOR DELETE USING (true);
+
+CREATE POLICY "Allow anon read room_types" ON room_types FOR SELECT USING (true);
+CREATE POLICY "Allow anon insert room_types" ON room_types FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon update room_types" ON room_types FOR UPDATE USING (true);
+CREATE POLICY "Allow anon delete room_types" ON room_types FOR DELETE USING (true);
+
+CREATE POLICY "Allow anon read rooms" ON rooms FOR SELECT USING (true);
+CREATE POLICY "Allow anon insert rooms" ON rooms FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon update rooms" ON rooms FOR UPDATE USING (true);
+CREATE POLICY "Allow anon delete rooms" ON rooms FOR DELETE USING (true);
