@@ -44,6 +44,13 @@ interface MealPlan {
   meal_plan: string
 }
 
+interface TransferType {
+  id: string
+  transfer_code: string
+  transfer_type: string
+  is_active: boolean
+}
+
 interface Operator {
   id: string
   name: string
@@ -57,7 +64,7 @@ interface Operator {
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<'guestHouse' | 'general'>('guestHouse')
-  const [guestHouseTab, setGuestHouseTab] = useState<'info' | 'roomTypes' | 'rooms' | 'operators' | 'countries' | 'mealPlans'>('info')
+  const [guestHouseTab, setGuestHouseTab] = useState<'info' | 'roomTypes' | 'rooms' | 'operators' | 'countries' | 'mealPlans' | 'transferTypes'>('info')
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -81,6 +88,7 @@ export default function Settings() {
   const [operators, setOperators] = useState<Operator[]>([])
   const [countries, setCountries] = useState<Country[]>([])
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
+  const [transferTypes, setTransferTypes] = useState<TransferType[]>([])
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -89,16 +97,19 @@ export default function Settings() {
   const [operatorForm, setOperatorForm] = useState<Partial<Operator>>({ is_active: true })
   const [countryForm, setCountryForm] = useState<Partial<Country>>({ is_active: true })
   const [mealPlanForm, setMealPlanForm] = useState<Partial<MealPlan>>({})
+  const [transferTypeForm, setTransferTypeForm] = useState<Partial<TransferType>>({ is_active: true })
   const [showRoomTypeModal, setShowRoomTypeModal] = useState(false)
   const [showRoomModal, setShowRoomModal] = useState(false)
   const [showOperatorModal, setShowOperatorModal] = useState(false)
   const [showCountryModal, setShowCountryModal] = useState(false)
   const [showMealPlanModal, setShowMealPlanModal] = useState(false)
+  const [showTransferTypeModal, setShowTransferTypeModal] = useState(false)
   const [editingRoomType, setEditingRoomType] = useState<RoomType | null>(null)
   const [editingRoom, setEditingRoom] = useState<Room | null>(null)
   const [editingOperator, setEditingOperator] = useState<Operator | null>(null)
   const [editingCountry, setEditingCountry] = useState<Country | null>(null)
   const [editingMealPlan, setEditingMealPlan] = useState<MealPlan | null>(null)
+  const [editingTransferType, setEditingTransferType] = useState<TransferType | null>(null)
   const { theme, toggleTheme } = useTheme()
   const [notifications, setNotifications] = useState(true)
 
@@ -109,13 +120,14 @@ export default function Settings() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [ghResult, rtResult, rResult, opResult, countryResult, mealPlanResult] = await Promise.all([
+      const [ghResult, rtResult, rResult, opResult, countryResult, mealPlanResult, transferTypeResult] = await Promise.all([
         supabase.from('guest_houses').select('*').limit(1).single(),
         supabase.from('room_types').select('*'),
         supabase.from('rooms').select('*'),
         supabase.from('customers').select('*').order('name'),
         supabase.from('countries').select('*').order('country_name'),
-        supabase.from('meal_plans').select('*').order('meal_code')
+        supabase.from('meal_plans').select('*').order('meal_code'),
+        supabase.from('transfer_types').select('*').order('transfer_code')
       ])
 
       if (ghResult.data) {
@@ -146,6 +158,7 @@ export default function Settings() {
       if (opResult.data) setOperators(opResult.data)
       if (countryResult.data) setCountries(countryResult.data)
       if (mealPlanResult.data) setMealPlans(mealPlanResult.data)
+      if (transferTypeResult.data) setTransferTypes(transferTypeResult.data)
       
       if (!countryResult.data || countryResult.data.length === 0) {
         await seedCountries()
@@ -611,6 +624,63 @@ export default function Settings() {
     setMealPlanForm({})
   }
 
+  const handleAddTransferType = async () => {
+    if (!transferTypeForm.transfer_code || !transferTypeForm.transfer_type) return
+    try {
+      const { data, error } = await supabase
+        .from('transfer_types')
+        .insert({
+          transfer_code: transferTypeForm.transfer_code,
+          transfer_type: transferTypeForm.transfer_type,
+          is_active: transferTypeForm.is_active ?? true
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      if (data) setTransferTypes([...transferTypes, data])
+      setTransferTypeForm({ is_active: true })
+      setShowTransferTypeModal(false)
+    } catch (error) {
+      console.error('Error adding transfer type:', error)
+    }
+  }
+
+  const handleEditTransferType = (transferType: TransferType) => {
+    setEditingTransferType(transferType)
+    setTransferTypeForm({ transfer_code: transferType.transfer_code, transfer_type: transferType.transfer_type, is_active: transferType.is_active })
+    setShowTransferTypeModal(true)
+  }
+
+  const handleUpdateTransferType = async () => {
+    if (!editingTransferType || !transferTypeForm.transfer_code || !transferTypeForm.transfer_type) return
+    try {
+      const { error } = await supabase
+        .from('transfer_types')
+        .update({
+          transfer_code: transferTypeForm.transfer_code,
+          transfer_type: transferTypeForm.transfer_type,
+          is_active: transferTypeForm.is_active ?? true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingTransferType.id)
+
+      if (error) throw error
+      setTransferTypes(transferTypes.map(tt => tt.id === editingTransferType.id ? { ...tt, ...transferTypeForm } as TransferType : tt))
+      setEditingTransferType(null)
+      setTransferTypeForm({ is_active: true })
+      setShowTransferTypeModal(false)
+    } catch (error) {
+      console.error('Error updating transfer type:', error)
+    }
+  }
+
+  const closeTransferTypeModal = () => {
+    setShowTransferTypeModal(false)
+    setEditingTransferType(null)
+    setTransferTypeForm({ is_active: true })
+  }
+
   if (loading) {
     return (
       <div style={{ ...styles.container, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -678,6 +748,12 @@ export default function Settings() {
               onClick={() => setGuestHouseTab('mealPlans')}
             >
               Meal Plans
+            </button>
+            <button
+              style={{ ...styles.subTab, ...(guestHouseTab === 'transferTypes' ? styles.activeSubTab : {}) }}
+              onClick={() => setGuestHouseTab('transferTypes')}
+            >
+              Transfer Types
             </button>
           </div>
 
@@ -1054,6 +1130,45 @@ export default function Settings() {
               </table>
             </div>
           )}
+
+          {guestHouseTab === 'transferTypes' && (
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <h3 style={styles.cardTitle}>Transfer Types</h3>
+                <button onClick={() => { setEditingTransferType(null); setTransferTypeForm({ is_active: true }); setShowTransferTypeModal(true); }} style={styles.addBtn}>
+                  <Plus size={16} /> Add Transfer Type
+                </button>
+              </div>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Transfer Code</th>
+                    <th style={styles.th}>Transfer Type</th>
+                    <th style={styles.th}>Status</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transferTypes.map((tt) => (
+                    <tr key={tt.id} style={styles.tr}>
+                      <td style={styles.td}>{tt.transfer_code}</td>
+                      <td style={styles.td}>{tt.transfer_type}</td>
+                      <td style={styles.td}>
+                        <span style={{ color: tt.is_active ? '#4CAF50' : '#FF6B6B', fontSize: '12px' }}>
+                          {tt.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <button onClick={() => handleEditTransferType(tt)} style={styles.editBtnTable}>
+                          <Edit2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 
@@ -1350,6 +1465,58 @@ export default function Settings() {
               <button onClick={closeMealPlanModal} style={styles.cancelBtn}>Cancel</button>
               <button onClick={editingMealPlan ? handleUpdateMealPlan : handleAddMealPlan} style={styles.saveBtn}>
                 {editingMealPlan ? 'Update' : 'Add'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTransferTypeModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modal}>
+            <div style={styles.modalHeader}>
+              <h3>{editingTransferType ? 'Edit Transfer Type' : 'Add Transfer Type'}</h3>
+              <button onClick={closeTransferTypeModal} style={styles.closeBtn}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={styles.modalBody}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Transfer Code *</label>
+                <input
+                  type="text"
+                  value={transferTypeForm.transfer_code || ''}
+                  onChange={(e) => setTransferTypeForm({ ...transferTypeForm, transfer_code: e.target.value })}
+                  placeholder="e.g. ARR"
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Transfer Type *</label>
+                <input
+                  type="text"
+                  value={transferTypeForm.transfer_type || ''}
+                  onChange={(e) => setTransferTypeForm({ ...transferTypeForm, transfer_type: e.target.value })}
+                  placeholder="e.g. Airport Arrival"
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={transferTypeForm.is_active ?? true}
+                    onChange={(e) => setTransferTypeForm({ ...transferTypeForm, is_active: e.target.checked })}
+                    style={styles.checkbox}
+                  />
+                  Active
+                </label>
+              </div>
+            </div>
+            <div style={styles.modalFooter}>
+              <button onClick={closeTransferTypeModal} style={styles.cancelBtn}>Cancel</button>
+              <button onClick={editingTransferType ? handleUpdateTransferType : handleAddTransferType} style={styles.saveBtn}>
+                {editingTransferType ? 'Update' : 'Add'}
               </button>
             </div>
           </div>
