@@ -510,16 +510,6 @@ export default function Settings() {
     }
   }
 
-  const handleDeleteCountry = async (id: string) => {
-    try {
-      const { error } = await supabase.from('countries').delete().eq('id', id)
-      if (error) throw error
-      setCountries(countries.filter(c => c.id !== id))
-    } catch (error) {
-      console.error('Error deleting country:', error)
-    }
-  }
-
   const handleEditCountry = (country: Country) => {
     setEditingCountry(country)
     setCountryForm({ country_name: country.country_name, is_active: country.is_active })
@@ -948,14 +938,9 @@ export default function Settings() {
                         </span>
                       </td>
                       <td style={styles.td}>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button onClick={() => handleEditCountry(country)} style={styles.editBtnTable}>
-                            <Edit2 size={14} />
-                          </button>
-                          <button onClick={() => handleDeleteCountry(country.id)} style={styles.deleteBtn}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                        <button onClick={() => handleEditCountry(country)} style={styles.editBtnTable}>
+                          <Edit2 size={14} />
+                        </button>
                       </td>
                     </tr>
                   ))}
